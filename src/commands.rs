@@ -1,4 +1,6 @@
 use crate::{Context, Error};
+use scioly_bot::parse_file;
+use yaml_rust2::{YamlEmitter, YamlLoader};
 
 #[poise::command(prefix_command, track_edits)]
 pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error> {
@@ -24,5 +26,11 @@ pub async fn rq(ctx: Context<'_>, _command: Option<String>) -> Result<(), Error>
 #[poise::command(prefix_command, track_edits)]
 pub async fn chat(ctx: Context<'_>, _command: Option<String>) -> Result<(), Error> {
     poise::say_reply(ctx, "chat it might be over :(").await?;
+    let year = 2024;
+    let invy = String::from("states");
+    let event = String::from("Chem Lab");
+    let school = String::from("Lynbrook");
+    let query = parse_file::Query::build_query(year, invy, school, event);
+    query.print_fields();
     Ok(())
 }
