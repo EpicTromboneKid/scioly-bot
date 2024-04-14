@@ -1,5 +1,6 @@
 use crate::{Context, Error};
 use scioly_bot::parse_file;
+use String;
 
 #[poise::command(prefix_command, track_edits)]
 pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error> {
@@ -15,26 +16,28 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
     Ok(())
 }
 
-#[poise::command(prefix_command, track_edits)]
+#[poise::command(track_edits, slash_command)]
 // this is the rank query function, taking in 4 arguments: year, invy, school, event
-pub async fn rq(ctx: Context<'_>, _command: Option<String>) -> Result<(), Error> {
-    let year = 2024;
-    let invy = String::from("states");
-    let event = String::from("Chemistry Lab");
-    let school = String::from("Lynbrook");
+pub async fn rq(
+    ctx: Context<'_>,
+    year: Option<u32>,
+    invy: Option<String>,
+    school: Option<String>,
+    mut event: Option<String>,
+) -> Result<(), Error> {
+    let year = year.expect("No year given!");
+    let invy = invy.expect("No invitational given!");
+    let school = school.expect("No school given!");
+    let event_clone = event.clone().expect("nothing given???");
+    let event = event.expect("No event given!");
+    println!("{} {} {} {}", &year, &invy, &school, &event);
     let query =
         parse_file::Query::build_query(year.clone(), invy.clone(), school.clone(), event.clone());
     let x = query.find_rank().to_string();
-    let mut out_string = String::new();
-    out_string.push_str(&school);
-    out_string.push_str(" ");
-    out_string.push_str(&event);
-    out_string.push_str("'s placement at ");
-    out_string.push_str(&invy);
-    out_string.push_str(" ");
-    out_string.push_str(&year.to_string());
-    out_string.push_str(" is: ");
-    out_string.push_str(&x);
+    let out_string = format!(
+        "{} {}'s placement at {} {} is: {} :)",
+        &school, &event_clone, &invy, &year, &x
+    );
     query.print_fields();
     println!("{x}");
     poise::say_reply(ctx, out_string).await?;
@@ -42,7 +45,7 @@ pub async fn rq(ctx: Context<'_>, _command: Option<String>) -> Result<(), Error>
 }
 
 #[poise::command(prefix_command, track_edits)]
-pub async fn chat(ctx: Context<'_>, _command: Option<String>) -> Result<(), Error> {
+pub async fn chat(ctx: Context<'_>) -> Result<(), Error> {
     poise::say_reply(ctx, "chat it might be over :(").await?;
     Ok(())
 }
