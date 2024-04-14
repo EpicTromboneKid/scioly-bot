@@ -27,9 +27,11 @@ pub async fn chat(ctx: Context<'_>, _command: Option<String>) -> Result<(), Erro
     poise::say_reply(ctx, "chat it might be over :(").await?;
     let year = 2024;
     let invy = String::from("states");
-    let event = String::from("Chem Lab");
+    let event = String::from("Chemistry Lab");
     let school = String::from("Lynbrook");
     let query = parse_file::Query::build_query(year, invy, school, event);
+    let x = query.find_rank();
     query.print_fields();
+    println!("{x}");
     Ok(())
 }
