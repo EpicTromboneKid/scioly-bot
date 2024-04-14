@@ -1,6 +1,5 @@
 use crate::{Context, Error};
 use scioly_bot::parse_file;
-use yaml_rust2::{YamlEmitter, YamlLoader};
 
 #[poise::command(prefix_command, track_edits)]
 pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error> {

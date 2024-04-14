@@ -1,15 +1,16 @@
 pub mod parse_file {
 
-    pub use yaml_rust2::{YamlEmitter, YamlLoader};
+    use std::{fs::File, io::Read};
+    use yaml_rust2::{YamlEmitter, YamlLoader};
+    use String;
 
     pub struct Query {
         qyear: u32,
         qinv: String,
         qschool: String,
         qevent: String,
-        school_number: u32,
-        file: String,
-        rank: u32,
+        _school_number: u32,
+        _rank: u32,
     }
 
     impl Query {
@@ -19,29 +20,40 @@ pub mod parse_file {
                 qinv,
                 qschool,
                 qevent,
-                school_number: 0,
-                file: String::new(),
-                rank: 0,
+                _school_number: 0,
+                _rank: 0,
             }
         }
 
-        fn _get_file(&mut self, qyear: u32, qinv: String) {
-            self.file = "2024-nCA_states.yaml".to_string();
+        fn _get_file(&self, _qyear: u32, _qinv: String) -> File {
+            let return_value: File =
+                File::open("/home/chaas/neovim/scioly-bot/src/2024-nCA_states.yaml").expect("hi");
+            println!("{:?}", return_value);
+            return_value
         }
-        fn _find_school(&mut self, qschool: String) {
-            let docs = YamlLoader::load_from_str(&self.file).unwrap();
+
+        fn find_school(&self, _qschool: &String) {
+            let mut test_file = String::new();
+            let _ = self
+                ._get_file(22, "lol".to_string())
+                .read_to_string(&mut test_file);
+            println!("{:?}", &test_file);
+            let docs =
+                YamlLoader::load_from_str(test_file.as_str()).expect("Loading file didn't work");
             let doc = &docs[0];
+            println!("{doc:?}");
+            println!("the docs: {:?}", docs);
             println!("{}", doc["Teams"][0]["school"].as_str().unwrap());
-            self.school_number;
         }
-        pub fn find_rank(&mut self, school_number: u32, qevent: String) {
-            self.rank;
-        }
+
+        fn _find_rank(&mut self, _school_number: u32, _qevent: String) {}
+
         pub fn print_fields(&self) {
             println!(
                 "year: {}, invitational: {}, school: {}, event: {}",
                 &self.qyear, &self.qinv, &self.qschool, &self.qevent
             );
+            self.find_school(&self.qschool)
         }
     }
 }
