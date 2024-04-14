@@ -35,13 +35,16 @@ pub mod parse_file {
             let current_dir = current_dir().unwrap();
             let mut path = current_dir.to_str().expect("bruh").to_string();
             let mut file_path = String::new();
+
             println!("this is the path: {:?}", &path);
             path.push_str("/duosmium/data/results");
             println!("this is the new path: {:?}", &path);
+
             for file in fs::read_dir(&path).expect("fake directory oof") {
                 file_path = file.unwrap().path().display().to_string();
+                println!("this is the current file path: {:?}", &file_path);
                 if file_path.contains(&self.qyear.to_string()) && file_path.contains(&self.qinv) {
-                    println!("Found file: {}", &file_path);
+                    println!("Found file: {:?}", &file_path);
                     break;
                 }
             }
