@@ -1,22 +1,26 @@
 pub mod parse_file {
     use std::env::current_dir;
     use std::fs;
-    use std::{fs::File, io::Read};
-    use yaml_rust2::{yaml::Array, YamlEmitter, YamlLoader};
-    use String;
+    use std::{fs::File, io::Error, io::ErrorKind::NotFound, io::Read};
+    use yaml_rust2::YamlLoader;
 
+    use String;
     pub struct Query {
         pub qyear: u32,
         pub qinv: String,
         pub qschool: String,
         pub qevent: String,
+        pub qdiv: String,
     }
 
     impl Query {
-        pub fn build_query(year: u32, inv: String, mut school: String, mut event: String) -> Query {
-            if school.contains("High School") != true {
-                school.push_str(" High School");
-            }
+        pub fn build_query(
+            year: u32,
+            inv: String,
+            school: String,
+            mut event: String,
+            div: String,
+        ) -> Query {
             if event.as_str().eq_ignore_ascii_case("Chemistry")
                 || event.clone().as_str().eq_ignore_ascii_case("Chem")
             {
@@ -28,12 +32,16 @@ pub mod parse_file {
                 qinv: inv,
                 qschool: school,
                 qevent: event,
+                qdiv: div,
             }
         }
 
-        fn get_file(&self) -> File {
-            let current_dir = current_dir().unwrap();
-            let mut path = current_dir.to_str().expect("bruh").to_string();
+        fn get_file(&self) -> Result<File, Error> {
+            let current_dir = current_dir()?;
+            let mut path = match current_dir.to_str() {
+                Some(x) => x.to_string(),
+                None => panic!("path not found"),
+            };
             let mut file_path = String::new();
 
             println!("this is the path: {:?}", &path);
@@ -49,16 +57,16 @@ pub mod parse_file {
                 }
             }
 
-            let return_value: File = File::open(file_path).expect("hi");
+            let return_value: File = File::open(file_path)?;
             println!("{:?}", return_value);
-            return_value
+            Ok(return_value)
         }
 
-        fn find_school(&self) -> (i64, yaml_rust2::Yaml) {
+        fn find_school(&self) -> Result<(i64, yaml_rust2::Yaml), Error> {
             let mut test_file = String::new();
             let mut school_number = -1;
             let error_val = &YamlLoader::load_from_str("school not found").unwrap()[0];
-            let _ = self.get_file().read_to_string(&mut test_file);
+            let _ = self.get_file()?.read_to_string(&mut test_file);
             let docs = YamlLoader::load_from_str(&test_file).expect("Loading file didn't work");
             let doc = &docs[0];
             println!(
@@ -76,16 +84,16 @@ pub mod parse_file {
                 {
                     school_number = i["number"].as_i64().expect("NaN");
                     println!("successfully found school_rank: {}", school_number);
-                    return (school_number, doc.clone());
+                    return Ok((school_number, doc.clone()));
                 } else {
                     println!("{:?}", &i["school"]);
                 }
             }
-            (school_number, error_val[0].clone())
+            Ok((school_number, error_val[0].clone()))
         }
 
-        pub fn find_rank(&self) -> i64 {
-            let (number, the_doc) = self.find_school();
+        pub fn find_rank(&self) -> Result<i64, Error> {
+            let (number, the_doc) = self.find_school()?;
             let event = &self.qevent;
             println!(
                 "in find_rank now, the number, first team, and event is: {:?}, {:?}, {:?}",
@@ -104,10 +112,10 @@ pub mod parse_file {
                     && event_at_i.as_str().eq_ignore_ascii_case(&event)
                 {
                     println!("{:?}", i["place"].clone().into_i64().expect("3"));
-                    return i["place"].clone().into_i64().expect("3");
+                    return Ok(i["place"].clone().into_i64().expect("3"));
                 }
             }
-            -1
+            Err(Error::new(NotFound, String::from("Could not find file")))
         }
 
         pub fn print_fields(&self) {
