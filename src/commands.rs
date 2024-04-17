@@ -1,8 +1,10 @@
 use crate::{Context, Error};
+use chrono::{Datelike, Utc};
 use scioly_bot::parse_file;
+use std::collections::HashMap;
 use String;
 
-#[poise::command(prefix_command, track_edits)]
+#[poise::command(prefix_command, track_edits, slash_command)]
 pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error> {
     poise::builtins::help(
         ctx,
@@ -20,44 +22,80 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
 // this is the rank query function, taking in 4 arguments: year, invy, school, event
 pub async fn rq(
     ctx: Context<'_>,
-    #[description = "Year of Invitational"] year: Option<u32>,
+    #[description = "Year of Invitational, defaults to the current year"] year: Option<u32>,
     #[description = "Invitational, if regionals or states, specify nCA or sCA"] invy: Option<
         String,
     >,
     #[description = "School of interest"] school: Option<String>,
     #[description = "Event of interest (i.e. Chem Lab)"] event: Option<String>,
-    #[description = "Division"] division: Option<char>,
+    #[description = "Division, defaults to Div. C"] division: Option<String>,
 ) -> Result<(), Error> {
-    let year = year.expect("No year given!");
-    let invy = invy.expect("No invitational given!");
-    let school = school.expect("No school given!");
-    let event = event.expect("No event given!");
-    let division = match division {
-        Some(div) => div.to_string(),
-        None => "c".to_string(),
-    };
-    let event_clone = event.clone();
+    //let error_embed = poise::serenity_prelude::CreateEmbed::new()
+    //  .colour(colour::Colour::DARK_RED)
+    //.description("Field(s) were not given!")
+    //.image("https://cdn-icons-png.flaticon.com/128/9426/9426995.png");
 
-    println!("{} {} {} {} {}", &year, &invy, &school, &event, &division);
-    let query = parse_file::Query::build_query(
-        year.clone(),
-        invy.clone(),
-        school.clone(),
-        event.clone(),
-        division.clone(),
+    let arg_hash_map = HashMap::from([
+        (0, "year"),
+        (1, "invitational"),
+        (2, "school"),
+        (3, "event"),
+        (4, "division"),
+    ]);
+
+    let qyear = year.unwrap_or(Utc::now().year().try_into()?);
+    let qinvy = invy
+        .unwrap_or("-1".to_string())
+        .to_string()
+        .trim()
+        .to_string();
+    let qschool = school.unwrap_or("-1".to_string()).trim().to_string();
+    let qevent = event.unwrap_or("-1".to_string()).trim().to_string();
+    let qdivision: String = division.unwrap_or("c".to_string()).to_string();
+    let array = [&qyear.to_string(), &qinvy, &qschool, &qevent, &qdivision];
+    let mut input = String::new();
+
+    println!(
+        "{} {} {} {} {}",
+        &qyear, &qinvy, &qschool, &qevent, &qdivision
     );
+
+    for (i, element) in array.iter().enumerate() {
+        if element == &&"-1".to_string() {
+            if let Some(arg) = arg_hash_map.get(&i) {
+                input.push_str(arg);
+            }
+        }
+    }
+    if input.len() != 0 {
+        poise::FrameworkError::new_argument_parse(
+            ctx,
+            Some(input),
+            Into::into("These arguments were not supplied."),
+        );
+    }
+
+    let query = parse_file::Query::build_query(
+        qyear.clone().try_into()?,
+        qinvy.clone().to_string(),
+        qschool.clone(),
+        qevent.clone(),
+        qdivision.clone(),
+    );
+
     let x = query.find_rank()?.to_string();
     let out_string = format!(
         "{} {}'s placement at {} {} is: {} :)",
-        &school, &event_clone, &invy, &year, &x
+        &qschool, &qevent, &qinvy, &qyear, &x
     );
+
     query.print_fields();
     println!("{x}");
     poise::say_reply(ctx, out_string).await?;
     Ok(())
 }
 
-#[poise::command(prefix_command, track_edits)]
+#[poise::command(prefix_command, slash_command)]
 pub async fn chat(ctx: Context<'_>) -> Result<(), Error> {
     poise::say_reply(ctx, "chat it might be over :(").await?;
     Ok(())

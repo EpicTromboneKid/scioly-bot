@@ -2,7 +2,12 @@
 
 mod commands;
 
-use poise::serenity_prelude as serenity;
+use poise::{
+    send_reply,
+    serenity_prelude::{self as serenity, CreateEmbedFooter},
+    CreateReply,
+};
+use scioly_bot::Error;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -10,12 +15,11 @@ use std::{
 };
 
 // Types used by all command functions
-type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 // Custom user data passed to all command functions
 pub struct Data {
-    votes: Mutex<HashMap<String, u32>>,
+    _votes: Mutex<HashMap<String, u32>>,
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -26,6 +30,22 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
         poise::FrameworkError::Command { error, ctx, .. } => {
             println!("Error in command `{}`: {:?}", ctx.command().name, error,);
+        }
+        poise::FrameworkError::ArgumentParse {
+            error, input, ctx, ..
+        } => {
+            println!(
+                "the input was {input:?}, and the command was {}, error {error}",
+                ctx.command().name
+            );
+
+            let embed = serenity::CreateEmbed::new();
+            let _ = embed
+                .color(serenity::Colour::DARK_RED)
+                .footer(CreateEmbedFooter::new("there seems to be an error :("));
+            let fake_reply: CreateReply = Default::default();
+            let reply = fake_reply.content(input.expect("not an input??"));
+            let _ = send_reply(ctx, reply).await;
         }
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
@@ -107,7 +127,7 @@ async fn main() {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    votes: Mutex::new(HashMap::new()),
+                    _votes: Mutex::new(HashMap::new()),
                 })
             })
         })

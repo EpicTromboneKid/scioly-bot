@@ -1,12 +1,28 @@
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+
+//mod parse_input {
+//  use crate::Error;
+//fn parse_input(
+//  in_year: u32,
+//in_invy: String,
+//in_school: String,
+//        in_event: String,
+//      in_div: String,
+//) -> Result<(u32, String, String, String, String), Error> {
+//}
+//}
+
 pub mod parse_file {
+    //use crate::parse_input;
+    use crate::Error;
+    use jwalk::WalkDir;
     use std::env::current_dir;
-    use std::fs;
-    use std::{fs::File, io::Error, io::ErrorKind::NotFound, io::Read};
+    use std::{fs::File, io::Read};
     use yaml_rust2::YamlLoader;
 
     use String;
     pub struct Query {
-        pub qyear: u32,
+        pub qyear: i32,
         pub qinv: String,
         pub qschool: String,
         pub qevent: String,
@@ -15,7 +31,7 @@ pub mod parse_file {
 
     impl Query {
         pub fn build_query(
-            year: u32,
+            year: i32,
             inv: String,
             school: String,
             mut event: String,
@@ -48,13 +64,9 @@ pub mod parse_file {
             path.push_str("/duosmium/data/results");
             println!("this is the new path: {:?}", &path);
 
-            for file in fs::read_dir(&path).expect("fake directory oof") {
-                file_path = file.unwrap().path().display().to_string();
-                println!("this is the current file path: {:?}", &file_path);
-                if file_path.contains(&self.qyear.to_string()) && file_path.contains(&self.qinv) {
-                    println!("Found file: {:?}", &file_path);
-                    break;
-                }
+            for file in WalkDir::new(&path).sort(true) {
+                file_path = file?.path().display().to_string();
+                println!("this is the file! {}", &file_path)
             }
 
             let return_value: File = File::open(file_path)?;
@@ -80,7 +92,8 @@ pub mod parse_file {
 
                 if school_at_i
                     .as_str()
-                    .eq_ignore_ascii_case(&self.qschool.as_str())
+                    .to_lowercase()
+                    .contains(&self.qschool.as_str().to_lowercase())
                 {
                     school_number = i["number"].as_i64().expect("NaN");
                     println!("successfully found school_rank: {}", school_number);
@@ -115,7 +128,7 @@ pub mod parse_file {
                     return Ok(i["place"].clone().into_i64().expect("3"));
                 }
             }
-            Err(Error::new(NotFound, String::from("Could not find file")))
+            Err(Into::into("placing not found"))
         }
 
         pub fn print_fields(&self) {
