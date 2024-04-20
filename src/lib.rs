@@ -15,10 +15,9 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub mod parse_file {
     use crate::Error;
     use poise::serenity_prelude::Error as serenError;
-    use rayon::prelude::*;
     use rust_search::SearchBuilder;
     use std::env::current_dir;
-    use std::{fs, panic::*};
+    use std::panic::*;
     use yaml_rust2::YamlLoader;
 
     use String;

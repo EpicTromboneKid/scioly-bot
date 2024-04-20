@@ -1,6 +1,5 @@
 use crate::{Context, Error};
 use chrono::{Datelike, Utc};
-use poise::serenity_prelude::{self, Error as serenityError};
 use scioly_bot::parse_file;
 use std::{collections::HashMap, panic::panic_any};
 use String;
@@ -61,9 +60,11 @@ pub async fn rq(
             if let Some(arg) = arg_hash_map.get(&i) {
                 println!("found an argument with -1 lol");
                 input.push_str(arg);
+                input.push_str(" ");
             }
         }
     }
+
     if input.len() != 0 {
         panic_any(input);
     }

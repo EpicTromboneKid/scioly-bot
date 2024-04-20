@@ -58,14 +58,14 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                 "the input was {payload:?}, and the command was {}, error {error}",
                 ctx.command().name
             );
-            let embed = serenity::CreateEmbed::new();
-            let _ = embed
+            let embed = serenity::CreateEmbed::default()
                 .color(serenity::Colour::DARK_RED)
                 .footer(CreateEmbedFooter::new("there seems to be an error :("));
-            let fake_reply: CreateReply = Default::default();
-            let reply = fake_reply
-                .content(payload.clone().expect("not an input??"))
-                .ephemeral(true);
+            let fake_reply = embed.title(format!(
+                "Provide the following values: {}",
+                payload.clone().expect("not an input??")
+            ));
+            let reply = CreateReply::default().embed(fake_reply).ephemeral(true);
             let _ = send_reply(ctx, reply).await;
         }
 
