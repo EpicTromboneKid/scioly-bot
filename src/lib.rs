@@ -13,11 +13,12 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 //}
 
 pub mod parse_file {
-    //use crate::parse_input;
     use crate::Error;
-    use jwalk::WalkDir;
+    use poise::serenity_prelude::Error as serenError;
+    use rayon::prelude::*;
+    use rust_search::SearchBuilder;
     use std::env::current_dir;
-    use std::{fs::File, io::Read};
+    use std::{fs, panic::*};
     use yaml_rust2::YamlLoader;
 
     use String;
@@ -52,33 +53,46 @@ pub mod parse_file {
             }
         }
 
-        fn get_file(&self) -> Result<File, Error> {
+        fn get_filepath(&self) -> Result<String, Error> {
             let current_dir = current_dir()?;
             let mut path = match current_dir.to_str() {
                 Some(x) => x.to_string(),
-                None => panic!("path not found"),
+                None => panic_any("path not found"),
             };
-            let mut file_path = String::new();
 
             println!("this is the path: {:?}", &path);
-            path.push_str("/duosmium/data/results");
+            path.push_str("/duosmium/data/results/");
             println!("this is the new path: {:?}", &path);
+            let mut files: Vec<String> = SearchBuilder::default()
+                .location(&path)
+                .depth(1)
+                .search_input(&self.qyear.to_string())
+                .build()
+                .collect();
+            files.remove(0);
+            println!("files: {files:?}");
 
-            for file in WalkDir::new(&path).sort(true) {
-                file_path = file?.path().display().to_string();
-                println!("this is the file! {}", &file_path)
+            for fakefile in files {
+                println!("this is the file! {:?}", &fakefile);
+                let file: String = std::fs::read_to_string(&fakefile)?;
+                let yaml_file = &YamlLoader::load_from_str(&file)?[0];
+                if fakefile.contains(&self.qinv)
+                    && yaml_file["Tournament"]["division"]
+                        .as_str()
+                        .expect("no division provided?")
+                        .to_string()
+                        .eq_ignore_ascii_case(&self.qdiv)
+                {
+                    println!("found file! {:?}", fakefile);
+                    return Ok(file);
+                }
             }
-
-            let return_value: File = File::open(file_path)?;
-            println!("{:?}", return_value);
-            Ok(return_value)
+            Err(Into::into("DNE".to_string()))
         }
 
         fn find_school(&self) -> Result<(i64, yaml_rust2::Yaml), Error> {
-            let mut test_file = String::new();
-            let mut school_number = -1;
-            let error_val = &YamlLoader::load_from_str("school not found").unwrap()[0];
-            let _ = self.get_file()?.read_to_string(&mut test_file);
+            let school_number;
+            let test_file = self.get_filepath()?;
             let docs = YamlLoader::load_from_str(&test_file).expect("Loading file didn't work");
             let doc = &docs[0];
             println!(
@@ -102,7 +116,7 @@ pub mod parse_file {
                     println!("{:?}", &i["school"]);
                 }
             }
-            Ok((school_number, error_val[0].clone()))
+            Err(Box::new(serenError::Other("couldn't find school")))
         }
 
         pub fn find_rank(&self) -> Result<i64, Error> {

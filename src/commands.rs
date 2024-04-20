@@ -1,7 +1,8 @@
 use crate::{Context, Error};
 use chrono::{Datelike, Utc};
+use poise::serenity_prelude::{self, Error as serenityError};
 use scioly_bot::parse_file;
-use std::collections::HashMap;
+use std::{collections::HashMap, panic::panic_any};
 use String;
 
 #[poise::command(prefix_command, track_edits, slash_command)]
@@ -30,11 +31,6 @@ pub async fn rq(
     #[description = "Event of interest (i.e. Chem Lab)"] event: Option<String>,
     #[description = "Division, defaults to Div. C"] division: Option<String>,
 ) -> Result<(), Error> {
-    //let error_embed = poise::serenity_prelude::CreateEmbed::new()
-    //  .colour(colour::Colour::DARK_RED)
-    //.description("Field(s) were not given!")
-    //.image("https://cdn-icons-png.flaticon.com/128/9426/9426995.png");
-
     let arg_hash_map = HashMap::from([
         (0, "year"),
         (1, "invitational"),
@@ -61,18 +57,15 @@ pub async fn rq(
     );
 
     for (i, element) in array.iter().enumerate() {
-        if element == &&"-1".to_string() {
+        if element.contains("-1") {
             if let Some(arg) = arg_hash_map.get(&i) {
+                println!("found an argument with -1 lol");
                 input.push_str(arg);
             }
         }
     }
     if input.len() != 0 {
-        poise::FrameworkError::new_argument_parse(
-            ctx,
-            Some(input),
-            Into::into("These arguments were not supplied."),
-        );
+        panic_any(input);
     }
 
     let query = parse_file::Query::build_query(

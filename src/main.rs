@@ -5,7 +5,7 @@ mod commands;
 use poise::{
     send_reply,
     serenity_prelude::{self as serenity, CreateEmbedFooter},
-    CreateReply,
+    CreateReply, FrameworkError,
 };
 use scioly_bot::Error;
 use std::{
@@ -29,24 +29,46 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     match error {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
         poise::FrameworkError::Command { error, ctx, .. } => {
-            println!("Error in command `{}`: {:?}", ctx.command().name, error,);
+            println!("Error in command `{}`: {:?}", ctx.command().name, error);
+            let _ = send_reply(
+                ctx,
+                poise::CreateReply::default().ephemeral(true).embed(
+                    serenity::CreateEmbed::default()
+                        .title(format!(
+                            "There was an error in command {}: {}",
+                            ctx.command().name,
+                            error
+                        ))
+                        .color(serenity::Colour::DARK_RED)
+                        .footer(CreateEmbedFooter::new(
+                            "if this keeps occurring, please let epictrombonekid know 💀"
+                                .to_string(),
+                        )),
+                ),
+            )
+            .await;
         }
-        poise::FrameworkError::ArgumentParse {
-            error, input, ctx, ..
+        FrameworkError::CommandPanic {
+            ref payload, ctx, ..
         } => {
+            if let None = &payload {
+                println!("there was an error :(");
+            }
             println!(
-                "the input was {input:?}, and the command was {}, error {error}",
+                "the input was {payload:?}, and the command was {}, error {error}",
                 ctx.command().name
             );
-
             let embed = serenity::CreateEmbed::new();
             let _ = embed
                 .color(serenity::Colour::DARK_RED)
                 .footer(CreateEmbedFooter::new("there seems to be an error :("));
             let fake_reply: CreateReply = Default::default();
-            let reply = fake_reply.content(input.expect("not an input??"));
+            let reply = fake_reply
+                .content(payload.clone().expect("not an input??"))
+                .ephemeral(true);
             let _ = send_reply(ctx, reply).await;
         }
+
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
                 println!("Error while handling error: {}", e)
