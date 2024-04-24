@@ -66,16 +66,16 @@ pub async fn rq(
     }
 
     if input.len() != 0 {
-        panic_any(input);
+        panic_any(format!("Provide the following arguments: {}", input));
     }
 
-    let query = parse_file::Query::build_query(
+    let query = parse_file::Input::build_input(
         qyear.clone().try_into()?,
         qinvy.clone().to_string(),
         qschool.clone(),
         qevent.clone(),
         qdivision.clone(),
-    );
+    )?;
 
     let x = query.find_rank()?.to_string();
     let out_string = format!(

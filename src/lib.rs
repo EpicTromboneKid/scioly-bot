@@ -1,18 +1,44 @@
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
-//mod parse_input {
-//  use crate::Error;
-//fn parse_input(
-//  in_year: u32,
-//in_invy: String,
-//in_school: String,
-//        in_event: String,
-//      in_div: String,
-//) -> Result<(u32, String, String, String, String), Error> {
-//}
-//}
+mod input_fixing {
+    use std::panic::panic_any;
+
+    use crate::{parse_file::Input, Error};
+
+    fn inv(invitational: String) -> Result<String, Error> {
+        Ok(invitational)
+    }
+
+    fn event(event: String) -> Result<String, Error> {
+        if event.to_lowercase().contains("chem") {
+            Ok("Chemistry Lab".to_string())
+        } else if event.parse() == Ok(-1) {
+            panic_any(format!("Event was not provided!"));
+        } else {
+            Ok(event)
+        }
+    }
+
+    fn school(school: String) -> Result<String, Error> {
+        Ok(school)
+    }
+
+    pub fn fix_inputs(query: Input) -> Result<Input, Error> {
+        let oinv = inv(query.qinv)?.trim().to_string();
+        let oevent = event(query.qevent)?.trim().to_string();
+        let oschool = school(query.qschool)?.trim().to_string();
+        Ok(Input::build_input(
+            query.qyear,
+            oinv,
+            oschool,
+            oevent,
+            query.qdiv,
+        )?)
+    }
+}
 
 pub mod parse_file {
+    use crate::input_fixing;
     use crate::Error;
     use poise::serenity_prelude::Error as serenError;
     use rust_search::SearchBuilder;
@@ -21,7 +47,7 @@ pub mod parse_file {
     use yaml_rust2::YamlLoader;
 
     use String;
-    pub struct Query {
+    pub struct Input {
         pub qyear: i32,
         pub qinv: String,
         pub qschool: String,
@@ -29,27 +55,23 @@ pub mod parse_file {
         pub qdiv: String,
     }
 
-    impl Query {
-        pub fn build_query(
+    impl Input {
+        pub fn build_input(
             year: i32,
             inv: String,
             school: String,
-            mut event: String,
+            event: String,
             div: String,
-        ) -> Query {
-            if event.as_str().eq_ignore_ascii_case("Chemistry")
-                || event.clone().as_str().eq_ignore_ascii_case("Chem")
-            {
-                event = "Chemistry Lab".to_string();
-            }
-
-            Query {
+        ) -> Result<Input, Error> {
+            let inq = Input {
                 qyear: year,
                 qinv: inv,
                 qschool: school,
                 qevent: event,
                 qdiv: div,
-            }
+            };
+
+            Ok(input_fixing::fix_inputs(inq)?)
         }
 
         fn get_filepath(&self) -> Result<String, Error> {
@@ -69,7 +91,6 @@ pub mod parse_file {
                 .build()
                 .collect();
             files.remove(0);
-            println!("files: {files:?}");
 
             for fakefile in files {
                 println!("this is the file! {:?}", &fakefile);

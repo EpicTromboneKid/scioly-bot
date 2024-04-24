@@ -61,10 +61,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
             let embed = serenity::CreateEmbed::default()
                 .color(serenity::Colour::DARK_RED)
                 .footer(CreateEmbedFooter::new("there seems to be an error :("));
-            let fake_reply = embed.title(format!(
-                "Provide the following values: {}",
-                payload.clone().expect("not an input??")
-            ));
+            let fake_reply = embed.title(format!("{}", payload.clone().expect("not an input??")));
             let reply = CreateReply::default().embed(fake_reply).ephemeral(true);
             let _ = send_reply(ctx, reply).await;
         }
