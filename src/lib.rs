@@ -27,13 +27,13 @@ mod input_fixing {
         let oinv = inv(query.qinv)?.trim().to_string();
         let oevent = event(query.qevent)?.trim().to_string();
         let oschool = school(query.qschool)?.trim().to_string();
-        Ok(Input::build_input(
-            query.qyear,
-            oinv,
-            oschool,
-            oevent,
-            query.qdiv,
-        )?)
+        Ok(Input {
+            qyear: query.qyear,
+            qinv: oinv,
+            qschool: oschool,
+            qevent: oevent,
+            qdiv: query.qdiv,
+        })
     }
 }
 
@@ -71,7 +71,9 @@ pub mod parse_file {
                 qdiv: div,
             };
 
-            Ok(input_fixing::fix_inputs(inq)?)
+            let outq: Input = input_fixing::fix_inputs(inq)?;
+
+            Ok(outq)
         }
 
         fn get_filepath(&self) -> Result<String, Error> {
