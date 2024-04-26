@@ -8,6 +8,9 @@ mod input_fixing {
     fn inv(invitational: String) -> Result<String, Error> {
         Ok(invitational)
     }
+    fn state(state: String) -> Result<String, Error> {
+        Ok(state)
+    }
 
     fn event(event: String) -> Result<String, Error> {
         if event.to_lowercase().contains("chem") {
@@ -27,10 +30,12 @@ mod input_fixing {
         let oinv = inv(query.qinv)?.trim().to_string();
         let oevent = event(query.qevent)?.trim().to_string();
         let oschool = school(query.qschool)?.trim().to_string();
+        let ostate = state(query.qstate)?.trim().to_string();
         Ok(Input {
             qyear: query.qyear,
             qinv: oinv,
             qschool: oschool,
+            qstate: ostate,
             qevent: oevent,
             qdiv: query.qdiv,
         })
@@ -51,6 +56,7 @@ pub mod parse_file {
         pub qyear: i32,
         pub qinv: String,
         pub qschool: String,
+        pub qstate: String,
         pub qevent: String,
         pub qdiv: String,
     }
@@ -60,6 +66,7 @@ pub mod parse_file {
             year: i32,
             inv: String,
             school: String,
+            state: String,
             event: String,
             div: String,
         ) -> Result<Input, Error> {
@@ -67,6 +74,7 @@ pub mod parse_file {
                 qyear: year,
                 qinv: inv,
                 qschool: school,
+                qstate: state,
                 qevent: event,
                 qdiv: div,
             };

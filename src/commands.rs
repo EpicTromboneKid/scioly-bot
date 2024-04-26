@@ -23,10 +23,9 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
 pub async fn rq(
     ctx: Context<'_>,
     #[description = "Year of Invitational, defaults to the current year"] year: Option<u32>,
-    #[description = "Invitational, if regionals or states, specify nCA or sCA"] invy: Option<
-        String,
-    >,
+    #[description = "Invitational"] invy: Option<String>,
     #[description = "School of interest"] school: Option<String>,
+    #[description = "State of Invitational"] state: Option<String>,
     #[description = "Event of interest (i.e. Chem Lab)"] event: Option<String>,
     #[description = "Division, defaults to Div. C"] division: Option<String>,
 ) -> Result<(), Error> {
@@ -34,8 +33,9 @@ pub async fn rq(
         (0, "year"),
         (1, "invitational"),
         (2, "school"),
-        (3, "event"),
-        (4, "division"),
+        (3, "state"),
+        (4, "event"),
+        (5, "division"),
     ]);
 
     let qyear = year.unwrap_or(Utc::now().year().try_into()?);
@@ -45,6 +45,7 @@ pub async fn rq(
         .trim()
         .to_string();
     let qschool = school.unwrap_or("-1".to_string()).trim().to_string();
+    let qstate = state.unwrap_or("-1".to_string()).trim().to_string();
     let qevent = event.unwrap_or("-1".to_string()).trim().to_string();
     let qdivision: String = division.unwrap_or("c".to_string()).to_string();
     let array = [&qyear.to_string(), &qinvy, &qschool, &qevent, &qdivision];
@@ -73,6 +74,7 @@ pub async fn rq(
         qyear.clone().try_into()?,
         qinvy.clone().to_string(),
         qschool.clone(),
+        qstate.clone(),
         qevent.clone(),
         qdivision.clone(),
     )?;
