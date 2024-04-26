@@ -7,7 +7,7 @@ use poise::{
     serenity_prelude::{self as serenity, CreateEmbedFooter},
     CreateReply, FrameworkError,
 };
-use scioly_bot::Error;
+use scioly_bot::utils::Error;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

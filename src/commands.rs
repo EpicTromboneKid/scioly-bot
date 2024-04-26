@@ -1,6 +1,6 @@
 use crate::{Context, Error};
 use chrono::{Datelike, Utc};
-use scioly_bot::parse_file;
+use scioly_bot::rank_query::parse_file;
 use std::{collections::HashMap, panic::panic_any};
 use String;
 
