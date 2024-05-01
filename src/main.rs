@@ -84,7 +84,13 @@ async fn main() {
         //
         //
         //
-        commands: vec![commands::help(), commands::rq(), commands::chat()],
+        commands: vec![
+            commands::help(),
+            commands::rq(),
+            commands::chat(),
+            commands::resources(),
+            commands::embed_with_rxns(),
+        ],
         // commands go above this lol
         //
         //

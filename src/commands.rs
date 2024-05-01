@@ -1,5 +1,6 @@
 use crate::{Context, Error};
 use chrono::{Datelike, Utc};
+use poise::serenity_prelude as serenity;
 use scioly_bot::rank_query::parse_file;
 use std::{collections::HashMap, panic::panic_any};
 use String;
@@ -18,6 +19,10 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
     Ok(())
 }
 
+/// Command to get the placement of an event at an invitational (can only be used as
+/// a slash command).
+///
+/// `/rq aggie Lynbrook nCA Chem Lab` would find the placement at aggie 2024 for LHS Chem lab.
 #[poise::command(track_edits, slash_command)]
 // this is the rank query function, taking in 4 arguments: year, invy, school, event
 pub async fn rq(
@@ -94,5 +99,34 @@ pub async fn rq(
 #[poise::command(prefix_command, slash_command)]
 pub async fn chat(ctx: Context<'_>) -> Result<(), Error> {
     poise::say_reply(ctx, "chat it might be over :(").await?;
+    Ok(())
+}
+
+#[poise::command(prefix_command, slash_command)]
+pub async fn resources(_ctx: Context<'_>) -> Result<(), Error> {
+    todo!()
+}
+
+#[poise::command(prefix_command, slash_command, track_edits, rename = "ewr")]
+pub async fn embed_with_rxns(ctx: Context<'_>) -> Result<(), Error> {
+    let ctx_id = ctx.id();
+    println!("ctx id: {}", ctx_id);
+    let prev_button_id = format!("{}prev", ctx_id);
+    let next_button_id = format!("{}next", ctx_id);
+
+    let reply = {
+        let components = serenity::CreateActionRow::Buttons(vec![
+            serenity::CreateButton::new(&prev_button_id).emoji('◀'),
+            serenity::CreateButton::new(&next_button_id).emoji('▶'),
+        ]);
+        // this is how to put hyperlinks in embed, just put this in a string "[SOINC](https://soinc.org)"
+        crate::CreateReply::default()
+            .ephemeral(true)
+            .embed(serenity::CreateEmbed::default().title("Science Olympiad Resources!"))
+            .components(vec![components])
+    };
+
+    ctx.send(reply).await?;
+
     Ok(())
 }
