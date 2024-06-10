@@ -1,2 +1,2 @@
-pub mod rank_query;
+pub mod commands;
 pub mod utils;

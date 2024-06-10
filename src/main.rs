@@ -1,13 +1,14 @@
 #![warn(clippy::str_to_string)]
 
-mod commands;
-
 use poise::{
     send_reply,
     serenity_prelude::{self as serenity, CreateEmbedFooter},
     CreateReply, FrameworkError,
 };
-use scioly_bot::utils::Error;
+use scioly_bot::{
+    commands::{chat, help, resources, test_handler},
+    utils::{Context, Data, Error},
+};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -15,12 +16,12 @@ use std::{
 };
 
 // Types used by all command functions
-type Context<'a> = poise::Context<'a, Data, Error>;
+//type Context<'a> = poise::Context<'a, Data, Error>;
 
 // Custom user data passed to all command functions
-pub struct Data {
-    _votes: Mutex<HashMap<String, u32>>,
-}
+//pub struct Data {
+//    _votes: Mutex<HashMap<String, u32>>,
+//}
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
@@ -42,7 +43,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                         .color(serenity::Colour::DARK_RED)
                         .footer(CreateEmbedFooter::new(
                             "if this keeps occurring, please let epictrombonekid know 💀"
-                                .to_string(),
+                                .to_owned(),
                         )),
                 ),
             )
@@ -51,7 +52,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
         FrameworkError::CommandPanic {
             ref payload, ctx, ..
         } => {
-            if let None = &payload {
+            if payload.is_none() {
                 println!("there was an error :(");
             }
             println!(
@@ -61,7 +62,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
             let embed = serenity::CreateEmbed::default()
                 .color(serenity::Colour::DARK_RED)
                 .footer(CreateEmbedFooter::new("there seems to be an error :("));
-            let fake_reply = embed.title(format!("{}", payload.clone().expect("not an input??")));
+            let fake_reply = embed.title(payload.clone().expect("not an input??").to_string());
             let reply = CreateReply::default().embed(fake_reply).ephemeral(true);
             let _ = send_reply(ctx, reply).await;
         }
@@ -85,11 +86,10 @@ async fn main() {
         //
         //
         commands: vec![
-            commands::help(),
-            commands::rq(),
-            commands::chat(),
-            commands::resources(),
-            commands::embed_with_rxns(),
+            test_handler::test(),
+            chat::chat(),
+            help::help(),
+            resources::resources(),
         ],
         // commands go above this lol
         //
