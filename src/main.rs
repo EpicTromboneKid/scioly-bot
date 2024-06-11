@@ -2,12 +2,12 @@
 
 use poise::{
     send_reply,
-    serenity_prelude::{self as serenity, CreateEmbedFooter},
+    serenity_prelude::{self as serenity, CreateEmbedFooter, FullEvent, Message},
     CreateReply, FrameworkError,
 };
 use scioly_bot::{
     commands::{chat, help, resources, test_handler},
-    utils::{Context, Data, Error},
+    utils::{Data, Error},
 };
 use std::{
     collections::HashMap,
@@ -136,6 +136,9 @@ async fn main() {
         skip_checks_for_owners: false,
         event_handler: |_ctx, event, _framework, _data| {
             Box::pin(async move {
+                if let FullEvent::Message { .. } = event {
+                    println!("message sent!")
+                };
                 println!(
                     "Got an event in event handler: {:?}",
                     event.snake_case_name()

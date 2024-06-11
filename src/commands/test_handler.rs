@@ -1,8 +1,19 @@
 use crate::utils::{Context, Error};
 
-#[poise::command(prefix_command, slash_command, subcommands("start", "end", "upload"))]
-pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("test").await?;
+pub mod test_starter {}
+
+pub mod terminator {}
+
+pub mod upload_handler {}
+
+#[poise::command(
+    prefix_command,
+    slash_command,
+    subcommands("start", "end", "upload"),
+    subcommand_required
+)]
+pub async fn test(_ctx: Context<'_>) -> Result<(), Error> {
+    println!("no subocmand given :(");
     Ok(())
 }
 
@@ -23,5 +34,3 @@ pub async fn upload(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("upload").await?;
     Ok(())
 }
-
-pub mod test_help {}
