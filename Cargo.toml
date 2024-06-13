@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 
-
 tokio = {version = "1.38", features = ["macros", "rt-multi-thread"]}
 poise = "0.6.1"
 yaml-rust2 = "0.8.1"
