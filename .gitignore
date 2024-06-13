@@ -1,4 +1,4 @@
 /target
-/src/secrets
+/src/secrets.rs
 /src/2024-nCA_states.yaml
 duosmium/

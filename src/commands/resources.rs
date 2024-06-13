@@ -24,8 +24,7 @@ pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
                 .description(description)
                 .color(serenity::Colour::DARK_GREEN)
                 .footer(CreateEmbedFooter::new(
-                    "More resources will be added as they are found! If any of the above links are outdated, 
-                    or you have any other resources, please let one of the officers know!",
+                    "More resources will be added as they are found! If any of the above links are outdated, or you have any other resources, please let one of the officers know!",
                 )),
         )
     };

@@ -7,6 +7,7 @@ use poise::{
 };
 use scioly_bot::{
     commands::{chat, help, resources, test_handler},
+    secrets,
     utils::{Data, Error},
 };
 use std::{
@@ -40,7 +41,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                             ctx.command().name,
                             error
                         ))
-                        .color(serenity::Colour::DARK_RED)
+                        .color(serenity::Color::RED)
                         .footer(CreateEmbedFooter::new(
                             "if this keeps occurring, please let epictrombonekid know 💀"
                                 .to_owned(),
@@ -134,11 +135,23 @@ async fn main() {
         // Enforce command checks even for owners (enforced by default)
         // Set to true to bypass checks, which is useful for testing
         skip_checks_for_owners: false,
-        event_handler: |_ctx, event, _framework, _data| {
+        event_handler: |ctx, event, _framework, _data| {
             Box::pin(async move {
-                if let FullEvent::Message { .. } = event {
-                    println!("message sent!")
-                };
+                if let FullEvent::Message {
+                    new_message:
+                        Message {
+                            attachments: attach_vec,
+                            ..
+                        },
+                } = event
+                {
+                    ctx.online();
+                    match test_handler::testing::Test::downloader(attach_vec.to_vec()) {
+                        Ok(name_list) => println!("this is the name list: {name_list:?}"),
+                        Err(error) => println!("there was an error: {error:?}"),
+                    };
+                }
+
                 println!(
                     "Got an event in event handler: {:?}",
                     event.snake_case_name()
@@ -161,7 +174,7 @@ async fn main() {
         })
         .options(options)
         .build();
-    let token = include_str!("secrets");
+    let token = secrets::api_key();
     let intents =
         serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
 
