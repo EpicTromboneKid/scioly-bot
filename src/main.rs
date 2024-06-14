@@ -135,18 +135,18 @@ async fn main() {
         // Enforce command checks even for owners (enforced by default)
         // Set to true to bypass checks, which is useful for testing
         skip_checks_for_owners: false,
-        event_handler: |ctx, event, _framework, _data| {
+        event_handler: move |ctx, event, _framework, _data| {
             Box::pin(async move {
                 if let FullEvent::Message {
-                    new_message:
-                        Message {
-                            attachments: attach_vec,
-                            ..
-                        },
+                    new_message: message,
                 } = event
                 {
-                    ctx.online();
-                    match test_handler::testing::Test::downloader(attach_vec.to_vec()) {
+                    match test_handler::testing::Test::downloader(
+                        ctx.to_owned(),
+                        message.to_owned(),
+                    )
+                    .await
+                    {
                         Ok(name_list) => println!("this is the name list: {name_list:?}"),
                         Err(error) => println!("there was an error: {error:?}"),
                     };

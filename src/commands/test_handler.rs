@@ -1,8 +1,8 @@
 use crate::utils::{Context, Error};
 
 pub mod testing {
-    use crate::utils::{Context, Error};
-    use poise::serenity_prelude::{self as serenity, Attachment, FullEvent, Message};
+    use crate::utils::Error;
+    use poise::serenity_prelude::{self as serenity, Attachment, Context, FullEvent, Message};
     pub struct Test {
         year: u32,
         place: String,
@@ -21,18 +21,22 @@ pub mod testing {
         pub fn end_test(&self) -> Result<(), Error> {
             todo!();
         }
-        pub fn downloader(attach_vec: Vec<Attachment>) -> Result<Vec<String>, Error> {
+        pub async fn downloader(context: Context, message: Message) -> Result<Vec<String>, Error> {
             let mut filename_list: Vec<String> = vec![];
-            for attachment in attach_vec {
-                let filetype = match attachment.content_type.clone() {
-                    Some(x) => Ok(x),
-                    None => Err("no filetype given"),
+            for attachment in message.attachments {
+                //
+                filename_list.push(attachment.filename.to_owned());
+                //
+                let content = match attachment.download().await {
+                    Ok(content) => content,
+                    Err(_) => {
+                        message
+                            .channel_id
+                            .say(&context, "Error downloading {attachment.filename:?}")
+                            .await?;
+                        continue;
+                    }
                 };
-                println!(
-                    "name: {}, url: {}, content_type: {}",
-                    attachment.filename, attachment.proxy_url, filetype?
-                );
-                filename_list.push(attachment.filename);
             }
             Ok(filename_list)
         }
