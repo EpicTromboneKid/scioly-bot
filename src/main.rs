@@ -137,21 +137,6 @@ async fn main() {
         skip_checks_for_owners: false,
         event_handler: move |ctx, event, _framework, _data| {
             Box::pin(async move {
-                if let FullEvent::Message {
-                    new_message: message,
-                } = event
-                {
-                    match test_handler::testing::Test::downloader(
-                        ctx.to_owned(),
-                        message.to_owned(),
-                    )
-                    .await
-                    {
-                        Ok(name_list) => println!("this is the name list: {name_list:?}"),
-                        Err(error) => println!("there was an error: {error:?}"),
-                    };
-                }
-
                 println!(
                     "Got an event in event handler: {:?}",
                     event.snake_case_name()
