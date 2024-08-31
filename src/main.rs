@@ -2,7 +2,7 @@
 
 use poise::{
     send_reply,
-    serenity_prelude::{self as serenity, CreateEmbedFooter, FullEvent, Message},
+    serenity_prelude::{self as serenity, CreateEmbedFooter},
     CreateReply, FrameworkError,
 };
 use scioly_bot::{
@@ -135,14 +135,8 @@ async fn main() {
         // Enforce command checks even for owners (enforced by default)
         // Set to true to bypass checks, which is useful for testing
         skip_checks_for_owners: false,
-        event_handler: move |ctx, event, _framework, _data| {
-            Box::pin(async move {
-                println!(
-                    "Got an event in event handler: {:?}",
-                    event.snake_case_name()
-                );
-                Ok(())
-            })
+        event_handler: move |ctx, event, framework, data| {
+            Box::pin(event_handler(ctx, event, framework, data))
         },
         ..Default::default()
     };
@@ -168,4 +162,26 @@ async fn main() {
         .await;
 
     client.unwrap().start().await.unwrap()
+}
+
+async fn event_handler(
+    ctx: &serenity::Context,
+    event: &serenity::FullEvent,
+    _framework: poise::FrameworkContext<'_, Data, Error>,
+    data: &Data,
+) -> Result<(), Error> {
+    match event {
+        serenity::FullEvent::Ready { data_about_bot, .. } => {
+            println!("Logged in as {}", data_about_bot.user.name);
+        }
+        serenity::FullEvent::InteractionCreate { interaction } => {
+            if interaction.id().to_string() == "start_button" {
+                println!("start time: {:?}", chrono::Utc::now().time().to_string());
+            }
+        }
+        _ => {
+            println!("Got an event! {:?}", event.snake_case_name());
+        }
+    }
+    Ok(())
 }

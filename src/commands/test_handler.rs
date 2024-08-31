@@ -1,46 +1,24 @@
-use poise::{serenity_prelude::CreateEmbed, CreateReply};
+use poise::{
+    serenity_prelude::{CreateActionRow, CreateButton, CreateEmbed, MessageBuilder},
+    CreateReply,
+};
 
 use crate::utils::{Context, Error};
 
 pub mod testing {
-    use crate::utils::Error;
-    use std::default::Default;
+    use crate::utils::events;
+    use chrono::Utc;
 
     pub struct Test {
         year: u32,
         place: String,
-        event: String,
-        division: String,
-        file: Vec<u8>,
-        filetype: String,
+        event: events::Events,
+        division: events::Division,
         has_parts: bool,
         parts: u32,
         allotted_time: u32,
         id: u64,
-    }
-    impl Test {
-        pub fn start_test(&self) -> Result<(), Error> {
-            todo!();
-        }
-        pub fn end_test(&self) -> Result<(), Error> {
-            todo!();
-        }
-        pub fn year(&mut self, year: u32) -> Result<(), Error> {
-            self.year = year;
-            Ok(())
-        }
-        pub fn place(&mut self, place: String) -> Result<(), Error> {
-            self.place = place;
-            Ok(())
-        }
-        pub fn event(&mut self, event: String) -> Result<(), Error> {
-            self.event = event;
-            Ok(())
-        }
-        pub fn allotted_time(&mut self, allotted_time: u32) -> Result<(), Error> {
-            self.allotted_time = allotted_time;
-            Ok(())
-        }
+        start_time: chrono::DateTime<Utc>,
     }
 }
 
@@ -55,24 +33,40 @@ pub async fn test(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(slash_command)]
+#[poise::command(slash_command, track_edits)]
 pub async fn start(ctx: Context<'_>, event: String) -> Result<(), Error> {
     let invoke_time = chrono::Utc::now()
         .time()
         .format("%-I:%M %p UTC")
         .to_string();
+
     println!("{invoke_time:?}");
     let invoke_title = event;
+
     let invoke_footer = poise::serenity_prelude::CreateEmbedFooter::new(format!(
         "Your invocation of this command was at {}.",
         invoke_time,
     ));
+
     let invoke_embed = CreateEmbed::default()
         .color(poise::serenity_prelude::Color::PURPLE)
         .footer(invoke_footer)
         .title(invoke_title);
-    let invoke_reply = CreateReply::default().embed(invoke_embed).ephemeral(false);
-    ctx.send(invoke_reply).await?;
+
+    let start_button = CreateButton::new("start_button")
+        .label("Start Test")
+        .emoji('🔬')
+        .style(poise::serenity_prelude::ButtonStyle::Success);
+
+    let invoke_components = vec![CreateActionRow::Buttons(vec![start_button])];
+
+    let invoke_reply = CreateReply::default()
+        .embed(invoke_embed)
+        .ephemeral(false)
+        .components(invoke_components);
+
+    let invoke_message = ctx.send(invoke_reply).await?;
+
     Ok(())
 }
 

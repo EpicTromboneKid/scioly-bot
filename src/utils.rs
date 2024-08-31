@@ -8,14 +8,15 @@ pub struct Data {
 
 use std::{collections::HashMap, sync::Mutex};
 
-mod events {
-    enum Events {
+pub mod events {
+    pub enum Events {
         AirTrajectory,
         AnatomyAndPhysiology,
         Astronomy,
         BungeeDrop,
         ChemistryLab,
         Codebusters,
+        CrimeBusters,
         DiseaseDetectives,
         DynamicPlanet,
         Ecology,
@@ -27,11 +28,21 @@ mod events {
         GeologicMapping,
         Helicopter,
         MaterialsScience,
+        MetricMastery,
         MicrobeMission,
+        MissionPossible,
         Optics,
+        PotionsAndPoisons,
+        ReachForTheStars,
+        RoadScholar,
         RobotTour,
+        Scrambler,
         Tower,
         WindPower,
         WriteItDoIt,
+    }
+    pub enum Division {
+        B,
+        C,
     }
 }
