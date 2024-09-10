@@ -165,19 +165,14 @@ async fn main() {
 }
 
 async fn event_handler(
-    ctx: &serenity::Context,
+    _ctx: &serenity::Context,
     event: &serenity::FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,
-    data: &Data,
+    _data: &Data,
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.name);
-        }
-        serenity::FullEvent::InteractionCreate { interaction } => {
-            if interaction.id().to_string() == "start_button" {
-                println!("start time: {:?}", chrono::Utc::now().time().to_string());
-            }
         }
         _ => {
             println!("Got an event! {:?}", event.snake_case_name());
