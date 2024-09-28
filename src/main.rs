@@ -153,7 +153,7 @@ async fn main() {
         })
         .options(options)
         .build();
-    let token = secrets::api_key();
+    let token = secrets::discord_api_key();
     let intents =
         serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
 

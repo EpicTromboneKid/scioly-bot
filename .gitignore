@@ -1,4 +1,5 @@
 /target
 /src/secrets.rs
+credentials.json
 /src/2024-nCA_states.yaml
 duosmium/
