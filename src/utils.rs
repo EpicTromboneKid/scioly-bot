@@ -82,9 +82,13 @@ pub mod events {
         ];
 
         let sorted_vec = fuzzy_search_sorted(&in_event, &event_list);
-        for (event, score) in &sorted_vec {
-            println!("{:?} {:?}", event, score);
+        if &in_event == "widi" {
+            Ok("Write It Do It".to_string())
+        } else {
+            for (event, score) in &sorted_vec {
+                println!("{:?} {:?}", event, score);
+            }
+            Ok(sorted_vec[0].0.to_string())
         }
-        Ok(sorted_vec[0].0.to_string())
     }
 }

@@ -1,26 +1,6 @@
 use crate::commands::embeds;
 use crate::utils::{Context, Error};
-#[allow(unused_imports)]
-use poise::serenity_prelude::colours::branding::GREEN;
-use poise::serenity_prelude::{
-    self as serenity, ButtonStyle, CreateActionRow, CreateButton, CreateEmbed,
-};
-
-pub mod testing {
-    use crate::utils::events;
-    use chrono::Utc;
-    pub struct Test {
-        year: u32,
-        place: String,
-        event: events::Events,
-        division: events::Division,
-        has_parts: bool,
-        parts: u32,
-        allotted_time: u32,
-        id: u64,
-        start_time: chrono::DateTime<Utc>,
-    }
-}
+use poise::serenity_prelude::{self as serenity};
 
 #[poise::command(slash_command, track_edits, rename = "test", global_cooldown = 10)]
 pub async fn test(ctx: Context<'_>, event: String) -> Result<(), Error> {
@@ -28,8 +8,9 @@ pub async fn test(ctx: Context<'_>, event: String) -> Result<(), Error> {
         .time()
         .format("%-I:%M %p UTC")
         .to_string();
+
     let actual_event = crate::utils::events::find_closest_event_name(event)?;
-    const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(60);
+    const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(3600);
 
     println!("{invoke_time:?}");
 
@@ -47,22 +28,7 @@ pub async fn test(ctx: Context<'_>, event: String) -> Result<(), Error> {
         if press.data.custom_id == start_button_id {
             embeds::send_test_embed(ctx, &press, &actual_event, &finish_id).await?;
         } else if press.data.custom_id == finish_id {
-            let finish_components = CreateActionRow::Buttons(vec![CreateButton::new(&finish_id)
-                .emoji('✅')
-                .style(ButtonStyle::Success)
-                .label("Submit Test")
-                .disabled(true)]);
-            let finish_embed = CreateEmbed::default()
-                .color(GREEN)
-                .title("Your test has been submitted!");
-            let finish_builder = serenity::CreateInteractionResponse::UpdateMessage(
-                serenity::CreateInteractionResponseMessage::new()
-                    .embed(finish_embed)
-                    .components(vec![finish_components]),
-            );
-            press
-                .create_response(ctx.serenity_context(), finish_builder)
-                .await?
+            embeds::send_finish_embed(ctx, &press, &actual_event, &finish_id).await?;
         } else {
             continue;
         }

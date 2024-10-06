@@ -777,6 +777,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "google-docs1"
+version = "5.0.5+20240613"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc84fbf2a2a71110eac9671bd5d922e675e134e8474b4b3c5ca6ac526a7460b3"
+dependencies = [
+ "anyhow",
+ "google-apis-common",
+ "http 0.2.12",
+ "hyper",
+ "hyper-rustls 0.25.0",
+ "itertools 0.13.0",
+ "mime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-service",
+ "url 1.7.2",
+]
+
+[[package]]
 name = "google-drive3"
 version = "5.0.5+20240618"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1785,6 +1805,7 @@ name = "scioly-bot"
 version = "0.0.2"
 dependencies = [
  "chrono",
+ "google-docs1",
  "google-drive3",
  "jwalk",
  "poise",
@@ -2791,9 +2812,9 @@ dependencies = [
 
 [[package]]
 name = "yaml-rust2"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8902160c4e6f2fb145dbe9d6760a75e3c9522d8bf796ed7047c85919ac7115f8"
+checksum = "2a1a1c0bc9823338a3bdf8c61f994f23ac004c6fa32c08cd152984499b445e8d"
 dependencies = [
  "arraydeque",
  "encoding_rs",
