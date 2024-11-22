@@ -3,7 +3,7 @@ use crate::utils::{Context, Error};
 use poise::serenity_prelude::{self as serenity};
 
 #[poise::command(slash_command, track_edits, rename = "test", global_cooldown = 10)]
-pub async fn test(ctx: Context<'_>, event: String) -> Result<(), Error> {
+pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Error> {
     let invoke_time = chrono::Utc::now()
         .time()
         .format("%-I:%M %p UTC")
@@ -26,7 +26,7 @@ pub async fn test(ctx: Context<'_>, event: String) -> Result<(), Error> {
         .await
     {
         if press.data.custom_id == start_button_id {
-            embeds::send_test_embed(ctx, &press, &actual_event, &finish_id).await?;
+            embeds::send_test_embed(ctx, &press, &actual_event, &finish_id, &team).await?;
         } else if press.data.custom_id == finish_id {
             embeds::send_finish_embed(ctx, &press, &actual_event, &finish_id).await?;
         } else {

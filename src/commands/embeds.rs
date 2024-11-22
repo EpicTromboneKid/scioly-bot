@@ -20,14 +20,17 @@ pub async fn send_finish_embed(
         .style(ButtonStyle::Success)
         .label("Submit Test")
         .disabled(true)]);
+
     let finish_embed = CreateEmbed::default()
         .color(GREEN)
         .title(format!("Your {} test has been submitted!", event));
+
     let finish_builder = serenity::CreateInteractionResponse::UpdateMessage(
         serenity::CreateInteractionResponseMessage::new()
             .embed(finish_embed)
             .components(vec![finish_components]),
     );
+
     press
         .create_response(ctx.serenity_context(), finish_builder)
         .await?;
@@ -72,25 +75,16 @@ pub async fn send_test_embed(
     press: &serenity::ComponentInteraction,
     event: &String,
     finish_id: &String,
+    team: &char,
 ) -> Result<(), Error> {
     let text = include_str!("../../credentials.json").to_string();
-    let docs_hub = crate::commands::google::docs::create_hub(text).await?;
-
-    let docs_req = docs1::api::Document {
-        title: Some(format!("{} {}", chrono::Utc::now().date_naive(), &event)),
-        ..Default::default()
-    };
-
-    let result = docs_hub.documents().create(docs_req).doit().await;
-
-    match result {
-        Err(e) => println!("{}", e),
-        _ => println!("bon garçon"),
-    }
 
     // insert link to answer doc here
-    let doc_url = "https://docs.rs/poise/latest/poise/serenity_prelude/struct.CreateEmbed.html";
-
+    let doc_url: String = format!(
+        "https://docs.google.com/document/d/{}/edit",
+        "oof" // result?.1.document_id.expect("hi guys")
+    );
+    println!("{doc_url}");
     // insert link to test here; must be input onto a sheet ig
     let test_url =
                 "[Link to test](https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs)";
