@@ -3,4 +3,6 @@
 credentials.json
 /src/2024-nCA_states.yaml
 duosmium/
-tokencache.json
+tokencachegdrive.json 
+sciolybot-creds.json
+tokencachegdocs.json

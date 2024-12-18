@@ -80,6 +80,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
+
     let options = poise::FrameworkOptions {
         // commands go here lol
         //
