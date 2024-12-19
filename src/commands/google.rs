@@ -1,7 +1,7 @@
 pub mod gdrive {
 
     use google_drive3::{
-        self as drive3, hyper_rustls::HttpsConnector,
+        self as drive3, api::Permission, hyper_rustls::HttpsConnector,
         hyper_util::client::legacy::connect::HttpConnector, yup_oauth2 as oauth2,
     };
 
@@ -29,6 +29,32 @@ pub mod gdrive {
         );
 
         Ok(drive3::DriveHub::new(client, auth))
+    }
+
+    pub async fn change_perms(
+        hub: &drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+        file_id: &str,
+        permission_type: crate::utils::Perms,
+    ) -> Result<Permission, crate::utils::Error> {
+        let perm = match permission_type {
+            crate::utils::Perms::Viewer() => "reader",
+            crate::utils::Perms::Commenter() => "commenter",
+            crate::utils::Perms::Editor() => "writer",
+            crate::utils::Perms::Owner() => "owner",
+        };
+
+        println!("changing perms to {}", perm);
+
+        let permission = google_drive3::api::Permission {
+            role: Some(perm.to_string()),
+            type_: Some("user".to_string()),
+            email_address: Some("chaaskandregula@gmail.com".to_string()),
+            ..Default::default()
+        };
+
+        let result = hub.permissions().create(permission, file_id).doit().await?;
+
+        Ok(result.1)
     }
 }
 

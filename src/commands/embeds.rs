@@ -1,9 +1,13 @@
 use crate::commands::google;
 use crate::secrets::{self, discord_api_key};
-use crate::utils::{Context, Error};
+use crate::utils::{Context, Error, Perms};
 use google_docs1::api::{Document, Scope};
+
+use google_docs1::hyper_rustls::HttpsConnector;
+use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
+use google_drive3::api::Permission;
 use poise::serenity_prelude::colours::branding::GREEN;
-use poise::serenity_prelude::CacheHttp;
+
 use poise::{
     serenity_prelude::{
         self as serenity, ButtonStyle, Color, CreateActionRow, CreateButton, CreateEmbed,
@@ -51,16 +55,12 @@ pub async fn send_test_embed(
     event: &String,
     finish_id: &String,
     team: &char,
-) -> Result<(), Error> {
-    println!("{}", secrets::servicefilename());
-
+) -> Result<(String, Permission), Error> {
     let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename())
         .await
         .expect("gdocs instantiation failed");
 
-    let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename())
-        .await
-        .expect("drive instantiation failed");
+    let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
 
     let req = Document {
         title: Some(format!(
@@ -72,42 +72,14 @@ pub async fn send_test_embed(
         ..Default::default()
     };
 
-    let result = scioly_docs
-        .documents()
-        .create(req)
-        .add_scope(Scope::Drive)
-        .doit()
-        .await?;
-
     //println!("{:?}", result);
 
-    // Share the document with sciolybot@gmail.com
-    let permission = google_drive3::api::Permission {
-        role: Some("writer".to_string()),
-        type_: Some("user".to_string()),
-        email_address: Some("sciolybot@gmail.com".to_string()),
-        ..Default::default()
-    };
+    let result = scioly_docs.documents().create(req).doit().await?;
 
-    scioly_drive
-        .permissions()
-        .create(
-            permission,
-            result
-                .1
-                .document_id
-                .clone()
-                .as_ref()
-                .expect("where is the doc id?"),
-        )
-        .doit()
-        .await?;
+    let file_id = result.1.document_id.expect("where is the doc id?");
 
     // insert link to answer doc here
-    let doc_url: String = format!(
-        "https://docs.google.com/document/d/{}/edit",
-        result.1.document_id.expect("where is the doc id?")
-    );
+    let doc_url: String = format!("https://docs.google.com/document/d/{}/edit", file_id);
     println!("{doc_url}");
 
     // insert link to test here; must be input onto a sheet ig
@@ -146,8 +118,11 @@ pub async fn send_test_embed(
                 .components(vec![test_components]),
         )
         .await?;
-    }
-    Ok(())
+    };
+    Ok((
+        file_id.clone(),
+        google::gdrive::change_perms(&scioly_drive, &file_id, Perms::Editor()).await?,
+    ))
 }
 
 pub async fn send_finish_embed(
@@ -155,6 +130,8 @@ pub async fn send_finish_embed(
     press: &serenity::ComponentInteraction,
     event: &String,
     finish_id: &String,
+    scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+    file_id: &str,
 ) -> Result<(), Error> {
     let finish_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')
@@ -168,13 +145,25 @@ pub async fn send_finish_embed(
 
     let finish_builder = serenity::CreateInteractionResponse::UpdateMessage(
         serenity::CreateInteractionResponseMessage::new()
-            .embed(finish_embed)
-            .components(vec![finish_components]),
+            .embed(finish_embed.clone())
+            .components(vec![finish_components.clone()]),
     );
-
-    press
-        .create_response(ctx.serenity_context(), finish_builder)
+    if press
+        .create_response(ctx.serenity_context(), finish_builder.clone())
+        .await
+        .is_err()
+    {
+        press
+            .message
+            .delete(poise::serenity_prelude::Http::new(discord_api_key()))
+            .await?;
+        ctx.send(
+            CreateReply::default()
+                .embed(finish_embed)
+                .components(vec![finish_components]),
+        )
         .await?;
+    }
 
     Ok(())
 }

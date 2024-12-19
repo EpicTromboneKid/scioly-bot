@@ -8,6 +8,13 @@ pub struct Data {
 
 use std::{collections::HashMap, sync::Mutex};
 
+pub enum Perms {
+    Viewer(),
+    Commenter(),
+    Editor(),
+    Owner(),
+}
+
 pub mod events {
     use rust_fuzzy_search::fuzzy_search_sorted;
     pub enum Events {

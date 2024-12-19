@@ -6,7 +6,7 @@ use poise::{
     CreateReply, FrameworkError,
 };
 use scioly_bot::{
-    commands::{chat, help, resources, test_handler},
+    commands::{chat, help, register, resources, test_handler},
     secrets,
     utils::{Data, Error},
 };
@@ -92,6 +92,7 @@ async fn main() {
             chat::chat(),
             help::help(),
             resources::resources(),
+            register::register_commands(),
         ],
         // commands go above this lol
         //
