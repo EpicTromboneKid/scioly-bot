@@ -1,7 +1,7 @@
 use crate::commands::google;
-use crate::secrets::{self, discord_api_key};
+use crate::secrets::discord_api_key;
 use crate::utils::{Context, Error, Perms};
-use google_docs1::api::{Document, Scope};
+use google_docs1::api::Document;
 
 use google_docs1::hyper_rustls::HttpsConnector;
 use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
@@ -52,16 +52,16 @@ pub async fn send_start_embed(
 pub async fn send_test_embed(
     ctx: Context<'_>,
     press: &serenity::ComponentInteraction,
-    event: &String,
+    reqinfo: (&String, &char),
     finish_id: &String,
-    team: &char,
-) -> Result<(String, Permission), Error> {
-    let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename())
-        .await
-        .expect("gdocs instantiation failed");
-
-    let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-
+    email: &str,
+    sciolyhubs: (
+        &google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
+        &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+    ),
+) -> Result<(String, Vec<(String, Permission)>), Error> {
+    let (event, team) = reqinfo;
+    let (sciolydocs, sciolydrive) = sciolyhubs;
     let req = Document {
         title: Some(format!(
             "{} Team {}, {}",
@@ -74,13 +74,12 @@ pub async fn send_test_embed(
 
     //println!("{:?}", result);
 
-    let result = scioly_docs.documents().create(req).doit().await?;
+    let result = sciolydocs.documents().create(req).doit().await?;
 
     let file_id = result.1.document_id.expect("where is the doc id?");
-
     // insert link to answer doc here
     let doc_url: String = format!("https://docs.google.com/document/d/{}/edit", file_id);
-    println!("{doc_url}");
+    //println!("{doc_url}");
 
     // insert link to test here; must be input onto a sheet ig
     let test_url =
@@ -121,7 +120,14 @@ pub async fn send_test_embed(
     };
     Ok((
         file_id.clone(),
-        google::gdrive::change_perms(&scioly_drive, &file_id, Perms::Editor()).await?,
+        google::gdrive::change_perms(
+            sciolydrive,
+            &file_id,
+            Perms::Editor(),
+            vec![email],
+            (false, Permission::default()),
+        )
+        .await?,
     ))
 }
 
@@ -130,8 +136,8 @@ pub async fn send_finish_embed(
     press: &serenity::ComponentInteraction,
     event: &String,
     finish_id: &String,
-    scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
-    file_id: &str,
+    _scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+    _file_id: &str,
 ) -> Result<(), Error> {
     let finish_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')

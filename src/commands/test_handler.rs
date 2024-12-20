@@ -1,11 +1,12 @@
+use std::panic::panic_any;
+
 use crate::commands::embeds;
 use crate::commands::google;
 use crate::secrets;
 use crate::utils::{Context, Error};
-use google_drive3::api::Permission;
 use poise::serenity_prelude::{self as serenity};
 
-#[poise::command(slash_command, track_edits, rename = "test", global_cooldown = 10)]
+#[poise::command(slash_command, track_edits, rename = "test", global_cooldown = 20)]
 pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Error> {
     let invoke_time = chrono::Utc::now()
         .time()
@@ -22,7 +23,8 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
     let finish_id = format!("{}finish", &ctx_id);
     let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
     let mut file_id = String::new();
-    let mut perms = Permission::default();
+    let mut perms = Vec::new();
+    let mut email = String::new();
 
     embeds::send_start_embed(ctx, &actual_event, &start_button_id, &invoke_time).await?;
 
@@ -32,28 +34,53 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
         .await
     {
         if press.data.custom_id == start_button_id {
-            (file_id, perms) =
-                embeds::send_test_embed(ctx, &press, &actual_event, &finish_id, &team).await?;
+            println!("{}", ctx.author().name.as_str());
+            email = match crate::utils::user_handling::find_user(ctx.author().name.as_str()) {
+                Some(email) => email,
+                None => {
+                    panic_any("You need to set your email first! Use `/set_email <email>` to set your email.");
+                }
+            };
+            let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename())
+                .await
+                .expect("gdocs instantiation failed");
+
+            let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
+            (file_id, perms) = embeds::send_test_embed(
+                ctx,
+                &press,
+                (&actual_event, &team),
+                &finish_id,
+                &email,
+                (&scioly_docs, &scioly_drive),
+            )
+            .await?;
             println!("perms: {:?}", perms);
         } else if press.data.custom_id == finish_id {
-            let permission = google_drive3::api::Permission {
-                role: Some("reader".to_string()),
-                type_: Some("user".to_string()),
-                email_address: Some("chaaskandregula@gmail.com".to_string()),
-                ..Default::default()
-            };
-
-            scioly_drive
-                .permissions()
-                .delete(&file_id, perms.id.as_ref().unwrap())
-                .doit()
+            for perm in &perms {
+                let (newemail, permission) = perm;
+                println!("email: {}, permission: {:?}", newemail, permission);
+                google::gdrive::change_perms(
+                    &scioly_drive,
+                    &file_id,
+                    crate::utils::Perms::Viewer(),
+                    vec![newemail],
+                    (true, permission.clone()),
+                )
                 .await?;
+            }
 
-            scioly_drive
-                .permissions()
-                .create(permission, &file_id)
-                .doit()
-                .await?;
+            //scioly_drive
+            //    .permissions()
+            //    .delete(&file_id, perms.id.as_ref().unwrap())
+            //    .doit()
+            //    .await?;
+            //
+            //scioly_drive
+            //    .permissions()
+            //    .create(permission, &file_id)
+            //    .doit()
+            //    .await?;
 
             embeds::send_finish_embed(
                 ctx,
@@ -61,7 +88,7 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
                 &actual_event,
                 &finish_id,
                 &scioly_drive,
-                file_id.as_str(),
+                &file_id,
             )
             .await?;
         } else {

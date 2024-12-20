@@ -8,6 +8,8 @@ pub struct Data {
 
 use std::{collections::HashMap, sync::Mutex};
 
+use user_handling::SciolyUser;
+
 pub enum Perms {
     Viewer(),
     Commenter(),
@@ -15,40 +17,64 @@ pub enum Perms {
     Owner(),
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Thing {
+    pub users: Vec<SciolyUser>,
+}
+
+pub mod user_handling {
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SciolyUser {
+        pub username: String,
+        pub default_email: String,
+        pub team: char,
+        pub events: Vec<String>,
+    }
+
+    impl Default for SciolyUser {
+        fn default() -> Self {
+            Self {
+                username: String::from(""),
+                default_email: String::from(""),
+                team: 'z',
+                events: Vec::new(),
+            }
+        }
+    }
+
+    pub fn get_user_data(file_path: &str) -> Vec<SciolyUser> {
+        let data = std::fs::read_to_string(file_path).unwrap();
+        let users: crate::utils::Thing = serde_json::from_str(&data).unwrap();
+        users.users
+    }
+
+    pub fn write_user_data(
+        file_path: &str,
+        users: Vec<SciolyUser>,
+    ) -> Result<(), crate::utils::Error> {
+        std::fs::write(
+            file_path,
+            serde_json::to_string(&crate::utils::Thing { users })?,
+        )?;
+        Ok(())
+    }
+
+    pub fn find_user(username: &str) -> Option<String> {
+        let users = get_user_data("userdata.json");
+        for user in &users {
+            println!("{:?}", user);
+            if user.username == username {
+                println!("found user; email: {:?}", &user.default_email);
+                return Some(user.default_email.clone());
+            }
+        }
+        None
+    }
+}
+
 pub mod events {
     use rust_fuzzy_search::fuzzy_search_sorted;
-    pub enum Events {
-        AirTrajectory,
-        AnatomyAndPhysiology,
-        Astronomy,
-        BungeeDrop,
-        ChemistryLab,
-        Codebusters,
-        CrimeBusters,
-        DiseaseDetectives,
-        DynamicPlanet,
-        Ecology,
-        ElectricVehicle,
-        Entomology,
-        ExperimentalDesign,
-        Forensics,
-        Fossils,
-        GeologicMapping,
-        Helicopter,
-        MaterialsScience,
-        MetricMastery,
-        MicrobeMission,
-        MissionPossible,
-        Optics,
-        PotionsAndPoisons,
-        ReachForTheStars,
-        RoadScholar,
-        RobotTour,
-        Scrambler,
-        Tower,
-        WindPower,
-        WriteItDoIt,
-    }
+
     pub enum Division {
         B,
         C,

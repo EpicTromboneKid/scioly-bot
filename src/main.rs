@@ -93,6 +93,7 @@ async fn main() {
             help::help(),
             resources::resources(),
             register::register_commands(),
+            resources::set_email(),
         ],
         // commands go above this lol
         //

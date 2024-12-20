@@ -35,7 +35,10 @@ pub mod gdrive {
         hub: &drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
         file_id: &str,
         permission_type: crate::utils::Perms,
-    ) -> Result<Permission, crate::utils::Error> {
+        emails: Vec<&str>,
+        change: (bool, Permission),
+    ) -> Result<Vec<(String, Permission)>, crate::utils::Error> {
+        let mut out_vec = vec![];
         let perm = match permission_type {
             crate::utils::Perms::Viewer() => "reader",
             crate::utils::Perms::Commenter() => "commenter",
@@ -43,18 +46,35 @@ pub mod gdrive {
             crate::utils::Perms::Owner() => "owner",
         };
 
-        println!("changing perms to {}", perm);
+        for email in emails {
+            println!("email: {}", email);
+            println!("changing perms to {}", perm);
 
-        let permission = google_drive3::api::Permission {
-            role: Some(perm.to_string()),
-            type_: Some("user".to_string()),
-            email_address: Some("chaaskandregula@gmail.com".to_string()),
-            ..Default::default()
-        };
+            if change.0 {
+                println!("{:?}", change.1);
 
-        let result = hub.permissions().create(permission, file_id).doit().await?;
+                hub.permissions()
+                    .delete(file_id, change.1.id.as_ref().unwrap())
+                    .doit()
+                    .await?;
+            }
 
-        Ok(result.1)
+            let permission = google_drive3::api::Permission {
+                role: Some(perm.to_string()),
+                type_: Some("user".to_string()),
+                email_address: Some(email.to_string()),
+                ..Default::default()
+            };
+
+            let result = hub
+                .permissions()
+                .create(permission.clone(), file_id)
+                .doit()
+                .await?;
+
+            out_vec.push((email.to_string(), result.1));
+        }
+        Ok(out_vec)
     }
 }
 

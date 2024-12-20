@@ -1,4 +1,4 @@
-use crate::utils::{Context, Error};
+use crate::utils::{user_handling, Context, Error};
 
 use poise::{
     serenity_prelude::{self as serenity, CreateEmbedFooter},
@@ -30,6 +30,37 @@ pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     ctx.send(reply).await?;
+
+    Ok(())
+}
+
+#[poise::command(prefix_command, slash_command)]
+pub async fn set_email(ctx: Context<'_>, email: String) -> Result<(), Error> {
+    let username = &ctx.author().name;
+    println!("username: {}", username);
+    println!("email: {}", email);
+
+    let mut users = user_handling::get_user_data("userdata.json");
+
+    let user = users.iter_mut().find(|u| &u.username == username);
+
+    if let Some(user) = user {
+        user.default_email = email.clone();
+    } else {
+        let new_user = user_handling::SciolyUser {
+            username: username.to_string(),
+            default_email: email.clone(),
+            team: 'z',
+            events: Vec::new(),
+        };
+        users.push(new_user);
+    }
+
+    user_handling::write_user_data("userdata.json", users)?;
+
+    let _ = &ctx
+        .say(format!("Your default email has been set to {}!", &email))
+        .await?;
 
     Ok(())
 }
