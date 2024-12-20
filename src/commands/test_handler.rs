@@ -24,7 +24,6 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
     let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
     let mut file_id = String::new();
     let mut perms = Vec::new();
-    let mut email = String::new();
 
     embeds::send_start_embed(ctx, &actual_event, &start_button_id, &invoke_time).await?;
 
@@ -35,7 +34,7 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
     {
         if press.data.custom_id == start_button_id {
             println!("{}", ctx.author().name.as_str());
-            email = match crate::utils::user_handling::find_user(ctx.author().name.as_str()) {
+            let email = match crate::utils::user_handling::find_user(ctx.author().name.as_str()) {
                 Some(email) => email,
                 None => {
                     panic_any("You need to set your email first! Use `/set_email <email>` to set your email.");
