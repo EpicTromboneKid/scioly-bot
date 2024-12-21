@@ -1,7 +1,10 @@
-use crate::utils::{user_handling, Context, Error};
+use crate::{
+    secrets,
+    utils::{self, user_handling, Context, Error},
+};
 
 use poise::{
-    serenity_prelude::{self as serenity, CreateEmbedFooter},
+    serenity_prelude::{self as serenity, Cache, CreateEmbedFooter, RoleId},
     CreateReply,
 };
 
@@ -34,24 +37,47 @@ pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// This sets your default email for the bot, which you provide; everything else is auto-detected.
 #[poise::command(prefix_command, slash_command)]
-pub async fn set_email(ctx: Context<'_>, email: String) -> Result<(), Error> {
-    let username = &ctx.author().name;
-    println!("username: {}", username);
-    println!("email: {}", email);
+pub async fn set_defaults(
+    ctx: Context<'_>,
+    #[description = "default email to use with the bot"] email: String,
+) -> Result<(), Error> {
+    let userid = &ctx.author().id.to_string();
+    let author_member = &ctx.author_member().await.unwrap();
+    let member_roles = author_member.roles(ctx).unwrap();
+    let mut roles = Vec::new();
+    let mut team = 'z';
 
-    let mut users = user_handling::get_user_data("userdata.json");
+    for role in member_roles {
+        if role.name.contains("Team") && role.name.len() == 6 {
+            team = role.name.chars().last().unwrap();
+            println!("team: {}", team);
+        }
+        roles.push(role.name);
+    }
 
-    let user = users.iter_mut().find(|u| &u.username == username);
+    let events = utils::events::extract_events(&roles);
+
+    //println!("events: {:?}", events);
+    //
+    //println!("userid: {}", userid);
+    //println!("email: {}", email);
+
+    let mut users = user_handling::get_user_data("userdata.json")?;
+
+    let user = users.iter_mut().find(|u| &u.userid == userid);
 
     if let Some(user) = user {
         user.default_email = email.clone();
+        user.team = team;
+        user.events = events.clone();
     } else {
         let new_user = user_handling::SciolyUser {
-            username: username.to_string(),
+            userid: userid.to_string(),
             default_email: email.clone(),
-            team: 'z',
-            events: Vec::new(),
+            team,
+            events: events.clone(),
         };
         users.push(new_user);
     }
@@ -59,7 +85,10 @@ pub async fn set_email(ctx: Context<'_>, email: String) -> Result<(), Error> {
     user_handling::write_user_data("userdata.json", users)?;
 
     let _ = &ctx
-        .say(format!("Your default email has been set to {}!", &email))
+        .say(format!(
+            "Your defaults have been set to: email: {}, team: {}, events: {:?}",
+            email, team, events
+        ))
         .await?;
 
     Ok(())

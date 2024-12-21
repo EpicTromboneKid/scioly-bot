@@ -1,45 +1,57 @@
-use std::panic::panic_any;
-
 use crate::commands::embeds;
 use crate::commands::google;
 use crate::secrets;
+use crate::utils;
 use crate::utils::{Context, Error};
 use poise::serenity_prelude::{self as serenity};
 
-#[poise::command(slash_command, track_edits, rename = "test", global_cooldown = 20)]
-pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Error> {
+#[poise::command(slash_command, track_edits, rename = "test", user_cooldown = 20)]
+pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
+    let mut event_id_list = Vec::new();
     let invoke_time = chrono::Utc::now()
         .time()
         .format("%-I:%M %p UTC")
         .to_string();
 
-    let actual_event = crate::utils::events::find_closest_event_name(event)?;
+    let event_list = match utils::user_handling::find_user(&ctx.author().id.to_string()) {
+        Ok(user) => user.events,
+        Err(e) => return Err("No events found; please register with `/set_defaults`!".into()),
+    };
+
+    for event in event_list {
+        let event_id = format!("{}{}", &ctx.id(), &event);
+        event_id_list.push((event, event_id));
+    }
+
     const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(3600);
 
     println!("{invoke_time:?}");
 
+    let mut event = String::new();
     let ctx_id = ctx.id();
-    let start_button_id = format!("{}starttest", &ctx_id);
     let finish_id = format!("{}finish", &ctx_id);
     let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
     let mut file_id = String::new();
     let mut perms = Vec::new();
 
-    embeds::send_start_embed(ctx, &actual_event, &start_button_id, &invoke_time).await?;
+    embeds::send_start_embed(ctx, &event_id_list, &invoke_time).await?;
 
     while let Some(press) = serenity::collector::ComponentInteractionCollector::new(ctx)
         .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
         .timeout(TIMEOUT_DURATION)
         .await
     {
-        if press.data.custom_id == start_button_id {
+        if event_id_list
+            .iter()
+            .any(|(_, id)| id == &press.data.custom_id)
+        {
+            let (actual_event, _) = event_id_list
+                .iter()
+                .find(|(_, id)| id == &press.data.custom_id)
+                .unwrap();
+            event = actual_event.clone();
             println!("{}", ctx.author().name.as_str());
-            let email = match crate::utils::user_handling::find_user(ctx.author().name.as_str()) {
-                Some(email) => email,
-                None => {
-                    panic_any("You need to set your email first! Use `/set_email <email>` to set your email.");
-                }
-            };
+            let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
             let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename())
                 .await
                 .expect("gdocs instantiation failed");
@@ -48,17 +60,15 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
             (file_id, perms) = embeds::send_test_embed(
                 ctx,
                 &press,
-                (&actual_event, &team),
+                (actual_event, &user.team),
                 &finish_id,
-                &email,
+                &user.default_email,
                 (&scioly_docs, &scioly_drive),
             )
             .await?;
-            println!("perms: {:?}", perms);
         } else if press.data.custom_id == finish_id {
             for perm in &perms {
                 let (newemail, permission) = perm;
-                println!("email: {}, permission: {:?}", newemail, permission);
                 google::gdrive::change_perms(
                     &scioly_drive,
                     &file_id,
@@ -69,27 +79,8 @@ pub async fn test(ctx: Context<'_>, event: String, team: char) -> Result<(), Err
                 .await?;
             }
 
-            //scioly_drive
-            //    .permissions()
-            //    .delete(&file_id, perms.id.as_ref().unwrap())
-            //    .doit()
-            //    .await?;
-            //
-            //scioly_drive
-            //    .permissions()
-            //    .create(permission, &file_id)
-            //    .doit()
-            //    .await?;
-
-            embeds::send_finish_embed(
-                ctx,
-                &press,
-                &actual_event,
-                &finish_id,
-                &scioly_drive,
-                &file_id,
-            )
-            .await?;
+            embeds::send_finish_embed(ctx, &press, &event, &finish_id, &scioly_drive, &file_id)
+                .await?;
         } else {
             continue;
         }

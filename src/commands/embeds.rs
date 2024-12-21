@@ -18,10 +18,10 @@ use poise::{
 
 pub async fn send_start_embed(
     ctx: Context<'_>,
-    event: &String,
-    start_button_id: &String,
+    event_list_ids: &Vec<(String, String)>,
     invoke_time: &String,
 ) -> Result<(), Error> {
+    let mut actionrow = Vec::new();
     let invoke_footer = CreateEmbedFooter::new(format!(
         "Your invocation of this command was at {}.",
         invoke_time,
@@ -30,14 +30,17 @@ pub async fn send_start_embed(
     let invoke_embed = CreateEmbed::default()
         .color(Color::PURPLE)
         .footer(invoke_footer)
-        .title(event);
+        .title("Start a test!");
 
-    let start_button = CreateButton::new(start_button_id)
-        .label("Start Test")
-        .emoji('🔬')
-        .style(ButtonStyle::Success);
+    for (event, start_button_id) in event_list_ids {
+        let start_button = CreateButton::new(start_button_id)
+            .label(format!("Start Test for {}", event))
+            .emoji('🔬')
+            .style(ButtonStyle::Success);
+        actionrow.push(start_button);
+    }
 
-    let invoke_components = vec![CreateActionRow::Buttons(vec![start_button])];
+    let invoke_components = vec![CreateActionRow::Buttons(actionrow)];
 
     let invoke_reply = CreateReply::default()
         .embed(invoke_embed)
