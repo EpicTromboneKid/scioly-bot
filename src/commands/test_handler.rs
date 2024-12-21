@@ -5,7 +5,13 @@ use crate::utils;
 use crate::utils::{Context, Error};
 use poise::serenity_prelude::{self as serenity};
 
-#[poise::command(slash_command, track_edits, rename = "test", user_cooldown = 20)]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    track_edits,
+    rename = "test",
+    user_cooldown = 20
+)]
 pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let mut event_id_list = Vec::new();
     let invoke_time = chrono::Utc::now()

@@ -59,11 +59,6 @@ pub async fn set_defaults(
 
     let events = utils::events::extract_events(&roles);
 
-    //println!("events: {:?}", events);
-    //
-    //println!("userid: {}", userid);
-    //println!("email: {}", email);
-
     let mut users = user_handling::get_user_data("userdata.json")?;
 
     let user = users.iter_mut().find(|u| &u.userid == userid);
