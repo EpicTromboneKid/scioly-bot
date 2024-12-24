@@ -35,8 +35,8 @@ pub mod gdrive {
         hub: &drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
         file_id: &str,
         permission_type: crate::utils::Perms,
-        emails: Vec<&str>,
-        change: (bool, Permission),
+        emails: &Vec<&str>,
+        change: (bool, &Permission),
     ) -> Result<Vec<(String, Permission)>, crate::utils::Error> {
         let mut out_vec = vec![];
         let perm = match permission_type {

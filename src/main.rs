@@ -2,9 +2,10 @@
 
 use poise::{
     send_reply,
-    serenity_prelude::{self as serenity, CreateEmbedFooter},
+    serenity_prelude::{self as serenity, CreateEmbedFooter, UserId},
     CreateReply, FrameworkError,
 };
+use rustls::crypto::{self};
 use scioly_bot::{
     commands::{chat, help, register, resources, test_handler},
     secrets,
@@ -81,6 +82,10 @@ async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
 
+    let _ = crypto::aws_lc_rs::default_provider().install_default();
+
+    let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
+    x.insert(poise::serenity_prelude::UserId::new(742791701986541599));
     let options = poise::FrameworkOptions {
         // commands go here lol
         //
@@ -141,6 +146,7 @@ async fn main() {
         event_handler: move |ctx, event, framework, data| {
             Box::pin(event_handler(ctx, event, framework, data))
         },
+        owners: x,
         ..Default::default()
     };
 

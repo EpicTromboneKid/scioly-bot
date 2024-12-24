@@ -1,10 +1,7 @@
-use crate::{
-    secrets,
-    utils::{self, user_handling, Context, Error},
-};
+use crate::utils::{self, user_handling, Context, Error};
 
 use poise::{
-    serenity_prelude::{self as serenity, Cache, CreateEmbedFooter, RoleId},
+    serenity_prelude::{self as serenity, CreateEmbedFooter},
     CreateReply,
 };
 

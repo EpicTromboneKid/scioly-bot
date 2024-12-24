@@ -23,9 +23,7 @@ pub struct Thing {
 }
 
 pub mod user_handling {
-    use poise::serenity_prelude::{Guild, Http, Role, RoleId};
-
-    use crate::secrets;
+    use poise::serenity_prelude::{Guild, Role, RoleId};
 
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SciolyUser {
@@ -76,7 +74,7 @@ pub mod user_handling {
     }
 
     pub fn get_user_roles(
-        userid: u64,
+        _userid: u64,
         guild: &Guild,
         member_role_ids: &Vec<RoleId>,
     ) -> Result<Vec<(RoleId, Role)>, crate::utils::Error> {
@@ -88,6 +86,20 @@ pub mod user_handling {
         }
 
         Ok(roles)
+    }
+
+    pub fn get_event_partners(
+        event: &String,
+        team: &String,
+    ) -> Result<Vec<SciolyUser>, crate::utils::Error> {
+        let mut partners = Vec::new();
+        let users = get_user_data("userdata.json")?;
+        for user in users {
+            if user.team == team.chars().next().unwrap() && user.events.contains(event) {
+                partners.push(user);
+            }
+        }
+        Ok(partners)
     }
 }
 

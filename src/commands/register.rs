@@ -1,4 +1,4 @@
-#[poise::command(prefix_command, track_edits, slash_command)]
+#[poise::command(prefix_command, track_edits, slash_command, owners_only)]
 
 pub async fn register_commands(ctx: crate::utils::Context<'_>) -> Result<(), crate::utils::Error> {
     poise::builtins::register_application_commands_buttons(ctx).await?;

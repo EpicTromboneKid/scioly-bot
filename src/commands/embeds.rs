@@ -8,6 +8,7 @@ use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
 use google_drive3::api::Permission;
 use poise::serenity_prelude::colours::branding::GREEN;
 
+use poise::ReplyHandle;
 use poise::{
     serenity_prelude::{
         self as serenity, ButtonStyle, Color, CreateActionRow, CreateButton, CreateEmbed,
@@ -16,10 +17,39 @@ use poise::{
     CreateReply,
 };
 
-pub async fn send_start_embed(
+pub async fn send_abort_embed(
+    ctx: Context<'_>,
+    press: &serenity::ComponentInteraction,
+) -> Result<(), Error> {
+    let abort_embed = CreateEmbed::default()
+        .color(Color::RED)
+        .title("Test Aborted")
+        .description("Your test has been aborted.");
+
+    let abort_components = vec![CreateActionRow::Buttons(vec![CreateButton::new(
+        "whatthefrik",
+    )
+    .emoji('❌')
+    .style(ButtonStyle::Danger)
+    .label("Aborted")
+    .disabled(true)])];
+
+    let builder = serenity::CreateInteractionResponse::UpdateMessage(
+        serenity::CreateInteractionResponseMessage::new()
+            .embed(abort_embed.clone())
+            .components(abort_components),
+    );
+
+    press.create_response(ctx, builder).await?;
+
+    Ok(())
+}
+
+pub async fn send_init_embed(
     ctx: Context<'_>,
     event_list_ids: &Vec<(String, String)>,
     invoke_time: &String,
+    abort_id: &String,
 ) -> Result<(), Error> {
     let mut actionrow = Vec::new();
     let invoke_footer = CreateEmbedFooter::new(format!(
@@ -29,6 +59,7 @@ pub async fn send_start_embed(
 
     let invoke_embed = CreateEmbed::default()
         .color(Color::PURPLE)
+        .description("Please select an event to start a test!")
         .footer(invoke_footer)
         .title("Start a test!");
 
@@ -36,9 +67,15 @@ pub async fn send_start_embed(
         let start_button = CreateButton::new(start_button_id)
             .label(format!("Start Test for {}", event))
             .emoji('🔬')
-            .style(ButtonStyle::Success);
+            .style(ButtonStyle::Secondary);
         actionrow.push(start_button);
     }
+
+    let abort_button = CreateButton::new(abort_id)
+        .label("Abort")
+        .emoji('❌')
+        .style(ButtonStyle::Danger);
+    actionrow.push(abort_button);
 
     let invoke_components = vec![CreateActionRow::Buttons(actionrow)];
 
@@ -52,6 +89,64 @@ pub async fn send_start_embed(
     Ok(())
 }
 
+pub async fn send_start_embed<'a>(
+    ctx: Context<'a>,
+    press: &serenity::ComponentInteraction,
+    event: &String,
+    event_id: &String,
+) -> Result<ReplyHandle<'a>, Error> {
+    let invoke_embed = CreateEmbed::default()
+        .color(Color::PURPLE)
+        .title(format!("Start the {} test!", event));
+
+    let start_button = CreateButton::new(event_id)
+        .label("Start Test")
+        .emoji('🔬')
+        .style(ButtonStyle::Success);
+
+    let invoke_components = CreateActionRow::Buttons(vec![start_button]);
+
+    let builder = serenity::CreateInteractionResponse::UpdateMessage(
+        serenity::CreateInteractionResponseMessage::new()
+            .embed(invoke_embed.clone())
+            .components(vec![invoke_components.clone()]),
+    );
+
+    let partners = crate::utils::user_handling::get_event_partners(event, event_id)?;
+
+    let partner_ids = partners
+        .iter()
+        .map(|partner| format!("<@{}>", partner.userid))
+        .collect::<Vec<String>>();
+
+    let oof =
+        match partner_ids.len() {
+            1 => {
+                ctx.say(format!(
+                    "When you and your partner <@{}> is ready, please start the test <@{}>!",
+                    &ctx.author().id,
+                    partner_ids[0]
+                ))
+                .await?
+            }
+            2 => {
+                ctx.say(format!(
+            "When you and your partners <@{}> and <@{}> are ready, please start the test <@{}>!",
+            &ctx.author().id, partner_ids[0], partner_ids[1]
+        ))
+                .await?
+            }
+            _ => return Err(
+                "You seem to have an incorrect amount of partners. Please contact an officer to fix this."
+                    .into(),
+            ),
+        };
+
+    press.create_response(ctx, builder).await?;
+
+    Ok(oof)
+}
+
 pub async fn send_test_embed(
     ctx: Context<'_>,
     press: &serenity::ComponentInteraction,
@@ -62,7 +157,9 @@ pub async fn send_test_embed(
         &google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
         &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
     ),
+    reply: &ReplyHandle<'_>,
 ) -> Result<(String, Vec<(String, Permission)>), Error> {
+    reply.delete(ctx).await?;
     let (event, team) = reqinfo;
     let (sciolydocs, sciolydrive) = sciolyhubs;
     let req = Document {
@@ -90,7 +187,7 @@ pub async fn send_test_embed(
 
     let test_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')
-        .style(ButtonStyle::Danger)
+        .style(ButtonStyle::Primary)
         .label("Submit Test")]);
 
     let test_embed = CreateEmbed::default()
@@ -110,10 +207,7 @@ pub async fn send_test_embed(
         .await
         .is_err()
     {
-        press
-            .message
-            .delete(poise::serenity_prelude::Http::new(discord_api_key()))
-            .await?;
+        press.message.delete(ctx).await?;
         ctx.send(
             CreateReply::default()
                 .embed(test_embed)
@@ -127,8 +221,8 @@ pub async fn send_test_embed(
             sciolydrive,
             &file_id,
             Perms::Editor(),
-            vec![email],
-            (false, Permission::default()),
+            &vec![email],
+            (false, &Permission::default()),
         )
         .await?,
     ))
@@ -144,7 +238,7 @@ pub async fn send_finish_embed(
 ) -> Result<(), Error> {
     let finish_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')
-        .style(ButtonStyle::Success)
+        .style(ButtonStyle::Primary)
         .label("Submit Test")
         .disabled(true)]);
 
