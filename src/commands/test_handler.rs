@@ -30,11 +30,11 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let mut the_event = String::new();
 
     let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename())
-        .await
-        .expect("gdocs instantiation failed");
+    let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename()).await?;
+    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
     let mut perms = Vec::new();
     let finish_id = format!("{}finish", &ctx_id);
+    let mut emails: Option<Vec<String>> = None;
 
     let mut reply: Option<ReplyHandle> = None;
     let event_list = match utils::user_handling::find_user(&ctx.author().id.to_string()) {
@@ -70,20 +70,21 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
                 &press,
                 (&the_event, &user.team),
                 &finish_id,
-                &user.default_email,
-                (&scioly_docs, &scioly_drive),
+                emails.as_ref().unwrap(),
+                (&scioly_docs, &scioly_drive, &scioly_sheets),
                 actual_reply,
             )
             .await?;
             println!("in event_id {}", the_event_id);
         } else if press.data.custom_id == finish_id {
+            press.defer(ctx).await?;
             for perm in &perms {
                 let (newemail, permission) = perm;
                 google::gdrive::change_perms(
                     &scioly_drive,
                     &file_id,
                     crate::utils::Perms::Viewer(),
-                    &vec![newemail],
+                    &vec![newemail.to_string()],
                     (true, permission),
                 )
                 .await?;
@@ -94,13 +95,17 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
             .iter()
             .any(|(_, id)| id == &press.data.custom_id)
         {
+            let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
             let (event, event_id) = event_id_list
                 .iter()
                 .find(|(_, id)| id == &press.data.custom_id)
                 .unwrap();
             the_event = event.to_string();
             the_event_id = event_id.to_string();
-            reply = Some(embeds::send_start_embed(ctx, &press, event, event_id).await?);
+            let stuff = embeds::send_start_embed(ctx, &press, event, event_id, &user.team).await?;
+            reply = Some(stuff.0);
+            emails = Some(stuff.1);
+            println!("event id: {}", the_event_id);
         } else {
             continue;
         }

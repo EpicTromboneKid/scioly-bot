@@ -35,7 +35,7 @@ pub mod gdrive {
         hub: &drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
         file_id: &str,
         permission_type: crate::utils::Perms,
-        emails: &Vec<&str>,
+        emails: &Vec<String>,
         change: (bool, &Permission),
     ) -> Result<Vec<(String, Permission)>, crate::utils::Error> {
         let mut out_vec = vec![];
@@ -108,5 +108,48 @@ pub mod gdocs {
         );
 
         Ok(docs1::api::Docs::new(client, auth))
+    }
+}
+
+pub mod gsheets {
+    use google_sheets4::{
+        self as sheets4, hyper_rustls::HttpsConnector,
+        hyper_util::client::legacy::connect::HttpConnector, yup_oauth2 as oauth2,
+    };
+
+    pub async fn instantiate_hub(
+        path: &str,
+    ) -> Result<sheets4::api::Sheets<HttpsConnector<HttpConnector>>, crate::utils::Error> {
+        let secret = oauth2::read_service_account_key(path).await?;
+
+        let auth = oauth2::ServiceAccountAuthenticator::builder(secret)
+            .persist_tokens_to_disk("tokencachegsheets.json")
+            .build()
+            .await
+            .expect("auth problem");
+
+        let client = sheets4::hyper_util::client::legacy::Client::builder(
+            sheets4::hyper_util::rt::TokioExecutor::new(),
+        )
+        .build(
+            sheets4::hyper_rustls::HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .expect("client problem")
+                .https_or_http()
+                .enable_http1()
+                .build(),
+        );
+
+        Ok(sheets4::Sheets::new(client, auth))
+    }
+
+    pub fn get_test_link(event: &str, values: Vec<Vec<serde_json::Value>>) -> Option<String> {
+        for row in values {
+            println!("{:?}", row);
+            if !row.is_empty() && row[0] == event {
+                return Some(row[1].to_string());
+            }
+        }
+        None
     }
 }

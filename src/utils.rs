@@ -90,15 +90,18 @@ pub mod user_handling {
 
     pub fn get_event_partners(
         event: &String,
-        team: &String,
+        userid: &str,
+        team: &char,
     ) -> Result<Vec<SciolyUser>, crate::utils::Error> {
         let mut partners = Vec::new();
         let users = get_user_data("userdata.json")?;
         for user in users {
-            if user.team == team.chars().next().unwrap() && user.events.contains(event) {
+            if &user.team == team && user.events.contains(event) && user.userid != userid {
+                println!("found partner: {:?}", &user);
                 partners.push(user);
             }
         }
+        println!("partners: {:?}", &partners);
         Ok(partners)
     }
 }

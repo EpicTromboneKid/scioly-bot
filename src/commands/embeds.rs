@@ -1,5 +1,4 @@
-use crate::commands::google;
-use crate::secrets::discord_api_key;
+use crate::commands::google::{self, gsheets};
 use crate::utils::{Context, Error, Perms};
 use google_docs1::api::Document;
 
@@ -94,7 +93,8 @@ pub async fn send_start_embed<'a>(
     press: &serenity::ComponentInteraction,
     event: &String,
     event_id: &String,
-) -> Result<ReplyHandle<'a>, Error> {
+    team: &char,
+) -> Result<(ReplyHandle<'a>, Vec<String>), Error> {
     let invoke_embed = CreateEmbed::default()
         .color(Color::PURPLE)
         .title(format!("Start the {} test!", event));
@@ -112,27 +112,40 @@ pub async fn send_start_embed<'a>(
             .components(vec![invoke_components.clone()]),
     );
 
-    let partners = crate::utils::user_handling::get_event_partners(event, event_id)?;
+    let partners =
+        crate::utils::user_handling::get_event_partners(event, &ctx.author().id.to_string(), team)?;
 
     let partner_ids = partners
         .iter()
-        .map(|partner| format!("<@{}>", partner.userid))
+        .map(|partner| partner.userid.to_string())
         .collect::<Vec<String>>();
+    let mut emails = partners
+        .iter()
+        .map(|partner| partner.default_email.clone())
+        .collect::<Vec<String>>();
+
+    emails.push(
+        crate::utils::user_handling::get_user_data("userdata.json")?
+            .iter()
+            .find(|user| user.userid == ctx.author().id.to_string())
+            .unwrap()
+            .default_email
+            .clone(),
+    );
 
     let oof =
         match partner_ids.len() {
             1 => {
                 ctx.say(format!(
                     "When you and your partner <@{}> is ready, please start the test <@{}>!",
-                    &ctx.author().id,
-                    partner_ids[0]
+                    partner_ids[0], &ctx.author().id
                 ))
                 .await?
             }
             2 => {
                 ctx.say(format!(
             "When you and your partners <@{}> and <@{}> are ready, please start the test <@{}>!",
-            &ctx.author().id, partner_ids[0], partner_ids[1]
+             partner_ids[0], partner_ids[1], &ctx.author().id
         ))
                 .await?
             }
@@ -144,7 +157,7 @@ pub async fn send_start_embed<'a>(
 
     press.create_response(ctx, builder).await?;
 
-    Ok(oof)
+    Ok((oof, emails))
 }
 
 pub async fn send_test_embed(
@@ -152,16 +165,17 @@ pub async fn send_test_embed(
     press: &serenity::ComponentInteraction,
     reqinfo: (&String, &char),
     finish_id: &String,
-    email: &str,
+    emails: &Vec<String>,
     sciolyhubs: (
         &google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
         &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+        &google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
     ),
     reply: &ReplyHandle<'_>,
 ) -> Result<(String, Vec<(String, Permission)>), Error> {
     reply.delete(ctx).await?;
     let (event, team) = reqinfo;
-    let (sciolydocs, sciolydrive) = sciolyhubs;
+    let (sciolydocs, sciolydrive, sciolysheets) = sciolyhubs;
     let req = Document {
         title: Some(format!(
             "{} Team {}, {}",
@@ -172,7 +186,17 @@ pub async fn send_test_embed(
         ..Default::default()
     };
 
-    //println!("{:?}", result);
+    let sheet_id = "1MutocwAPR2Fwzj8PC9rQP3QqYzfcb91-D3fNnzrJLeI";
+
+    let sheets = sciolysheets
+        .spreadsheets()
+        .values_get(sheet_id, "'test-sheet'!B:C")
+        .doit()
+        .await?
+        .1
+        .values
+        .unwrap();
+    println!("{:?}", sheets);
 
     let result = sciolydocs.documents().create(req).doit().await?;
 
@@ -182,8 +206,12 @@ pub async fn send_test_embed(
     //println!("{doc_url}");
 
     // insert link to test here; must be input onto a sheet ig
-    let test_url =
-                "[Link to test](https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs)";
+    let test_url = match gsheets::get_test_link(event, sheets) {
+        Some(url) => url,
+        None => {
+            return Err("Test URL not found, let one of the officers know.".into());
+        }
+    };
 
     let test_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')
@@ -194,38 +222,25 @@ pub async fn send_test_embed(
         .color(Color::BLUE)
         .title(format!("Answer Google Doc for {}", &event))
         .url(doc_url)
-        .description(format!("This is the link to the test: {}", test_url));
+        .description(format!(
+            "This is the [link]({}) to the test",
+            &test_url[1..test_url.len() - 1]
+        ));
 
-    let builder = serenity::CreateInteractionResponse::UpdateMessage(
-        serenity::CreateInteractionResponseMessage::new()
-            .embed(test_embed.clone())
-            .components(vec![test_components.clone()]),
-    );
+    let builder = serenity::CreateInteractionResponseFollowup::new()
+        .embed(test_embed)
+        .components(vec![test_components]);
 
-    if press
-        .create_response(ctx.serenity_context(), builder.clone())
-        .await
-        .is_err()
-    {
-        press.message.delete(ctx).await?;
-        ctx.send(
-            CreateReply::default()
-                .embed(test_embed)
-                .components(vec![test_components]),
-        )
-        .await?;
-    };
-    Ok((
-        file_id.clone(),
-        google::gdrive::change_perms(
-            sciolydrive,
-            &file_id,
-            Perms::Editor(),
-            &vec![email],
-            (false, &Permission::default()),
-        )
-        .await?,
-    ))
+    press.create_followup(ctx, builder).await?;
+    let out = google::gdrive::change_perms(
+        sciolydrive,
+        &file_id,
+        Perms::Editor(),
+        emails,
+        (false, &Permission::default()),
+    )
+    .await?;
+    Ok((file_id.clone(), out))
 }
 
 pub async fn send_finish_embed(
@@ -246,27 +261,13 @@ pub async fn send_finish_embed(
         .color(GREEN)
         .title(format!("Your {} test has been submitted!", event));
 
-    let finish_builder = serenity::CreateInteractionResponse::UpdateMessage(
-        serenity::CreateInteractionResponseMessage::new()
-            .embed(finish_embed.clone())
-            .components(vec![finish_components.clone()]),
-    );
-    if press
-        .create_response(ctx.serenity_context(), finish_builder.clone())
-        .await
-        .is_err()
-    {
-        press
-            .message
-            .delete(poise::serenity_prelude::Http::new(discord_api_key()))
-            .await?;
-        ctx.send(
-            CreateReply::default()
-                .embed(finish_embed)
-                .components(vec![finish_components]),
-        )
+    let finish_builder = serenity::CreateInteractionResponseFollowup::new()
+        .embed(finish_embed)
+        .components(vec![finish_components]);
+
+    press
+        .create_followup(ctx.serenity_context(), finish_builder)
         .await?;
-    }
 
     Ok(())
 }
