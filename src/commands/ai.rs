@@ -1,13 +1,10 @@
 use mistralrs::{
-    IsqType, PagedAttentionMetaBuilder, Response, TextMessageRole, TextMessages, TextModelBuilder,
+    IsqType, PagedAttentionMetaBuilder, RequestBuilder, TextMessageRole, TextModelBuilder,
 };
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-#[poise::command(prefix_command, slash_command, track_edits, rename = "ask")]
-pub async fn ai(
-    ctx: crate::utils::Context<'_>,
-    #[rest] prompt: String,
-) -> Result<(), crate::utils::Error> {
-    ctx.defer_or_broadcast().await?;
+pub async fn initialize_model() -> Result<crate::utils::SharedModel, crate::utils::Error> {
     let model = TextModelBuilder::new("microsoft/Phi-3.5-mini-instruct".to_string())
         .with_isq(IsqType::Q4_1)
         .with_logging()
@@ -15,22 +12,42 @@ pub async fn ai(
         .build()
         .await?;
 
+    Ok(Arc::new(Mutex::new(model)))
+}
+
+#[poise::command(prefix_command, slash_command, rename = "ask")]
+pub async fn ai(
+    ctx: crate::utils::Context<'_>,
+    #[rest] mut prompt: String,
+) -> Result<(), crate::utils::Error> {
+    ctx.defer_or_broadcast().await?;
+
+    let model = crate::utils::MODEL.get().unwrap().lock().await;
+    let messages = RequestBuilder::new()
+        .add_message(
+            TextMessageRole::System,
+            "You are aiding high school students with general science questions.",
+        )
+        .add_message(TextMessageRole::User, &prompt);
+
     println!("Prompt: {}", prompt);
+    println!("sending request");
 
-    let messages = TextMessages::new().add_message(TextMessageRole::User, prompt);
+    let response = model.send_chat_request(messages).await?;
 
-    let mut stream = model.stream_chat_request(messages).await?;
+    let output = match response.choices[0].message.content.as_ref().unwrap().len() > 1000 {
+        true => response.choices[0]
+            .message
+            .content
+            .as_ref()
+            .unwrap()
+            .get(0..1000)
+            .unwrap(),
+        false => response.choices[0].message.content.as_ref().unwrap(),
+    };
 
-    let mut output = String::new();
+    println!("Output: {}", output);
 
-    while let Some(chunk) = stream.next().await {
-        if let Response::Chunk(chunk) = chunk {
-            output.push_str(&chunk.choices[0].delta.content);
-            println!("{}", &chunk.choices[0].delta.content);
-        } else {
-            return Err("Error while stream parsing".into());
-        }
-    }
-    ctx.say(&output).await?;
+    ctx.say(output).await?;
     Ok(())
 }

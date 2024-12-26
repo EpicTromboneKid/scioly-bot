@@ -75,11 +75,6 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
             )
             .await?;
 
-            ctx.set_invocation_data(utils::Data {
-                start_time: Some(SystemTime::now()),
-            })
-            .await;
-
             println!(" hi there{:?}{:?}", ctx.data(), SystemTime::now());
 
             println!("in event_id {}", the_event_id);

@@ -9,7 +9,7 @@ use rustls::crypto::{self};
 use scioly_bot::{
     commands::{ai, chat, help, register, resources, test_handler},
     secrets,
-    utils::{Data, Error},
+    utils::{Data, Error, MODEL},
 };
 use std::{sync::Arc, time::Duration};
 
@@ -69,18 +69,17 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
+    //
+    let model = ai::initialize_model().await.unwrap();
+
+    let _ = MODEL.set(model);
 
     let _ = crypto::aws_lc_rs::default_provider().install_default();
-
     let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
     x.insert(poise::serenity_prelude::UserId::new(742791701986541599));
 
     let options = poise::FrameworkOptions {
         // commands go here lol
-        //
-        //
-        //
-        //
         commands: vec![
             test_handler::test(),
             chat::chat(),
@@ -91,10 +90,6 @@ async fn main() {
             ai::ai(),
         ],
         // commands go above this lol
-        //
-        //
-        //
-        //
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some("!".into()),
             edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
@@ -145,7 +140,7 @@ async fn main() {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data { start_time: None })
+                Ok(Data {})
             })
         })
         .options(options)
