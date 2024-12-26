@@ -2,11 +2,10 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
+#[derive(Debug)]
 pub struct Data {
-    pub _votes: Mutex<HashMap<String, u32>>,
+    pub start_time: Option<std::time::SystemTime>,
 }
-
-use std::{collections::HashMap, sync::Mutex};
 
 use user_handling::SciolyUser;
 
@@ -23,7 +22,6 @@ pub struct Thing {
 }
 
 pub mod user_handling {
-    use poise::serenity_prelude::{Guild, Role, RoleId};
 
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SciolyUser {
@@ -31,6 +29,7 @@ pub mod user_handling {
         pub default_email: String,
         pub team: char,
         pub events: Vec<String>,
+        pub officer: bool,
     }
 
     impl Default for SciolyUser {
@@ -40,6 +39,7 @@ pub mod user_handling {
                 default_email: String::from(""),
                 team: 'z',
                 events: Vec::new(),
+                officer: false,
             }
         }
     }
@@ -73,21 +73,6 @@ pub mod user_handling {
         Err("User not found".into())
     }
 
-    pub fn get_user_roles(
-        _userid: u64,
-        guild: &Guild,
-        member_role_ids: &Vec<RoleId>,
-    ) -> Result<Vec<(RoleId, Role)>, crate::utils::Error> {
-        let mut roles: Vec<(RoleId, Role)> = Vec::new();
-
-        for &role_id in member_role_ids {
-            let role = guild.roles.get(&role_id).unwrap();
-            roles.push((role_id, role.clone()));
-        }
-
-        Ok(roles)
-    }
-
     pub fn get_event_partners(
         event: &String,
         userid: &str,
@@ -103,6 +88,17 @@ pub mod user_handling {
         }
         println!("partners: {:?}", &partners);
         Ok(partners)
+    }
+
+    pub fn get_officers_emails() -> Result<Vec<String>, crate::utils::Error> {
+        let mut emails = Vec::new();
+        let users = get_user_data("userdata.json")?;
+        for user in users {
+            if user.officer {
+                emails.push(user.default_email);
+            }
+        }
+        Ok(emails)
     }
 }
 

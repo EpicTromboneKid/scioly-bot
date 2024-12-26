@@ -7,7 +7,6 @@ use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
 use google_drive3::api::Permission;
 use poise::serenity_prelude::colours::branding::GREEN;
 
-use poise::ReplyHandle;
 use poise::{
     serenity_prelude::{
         self as serenity, ButtonStyle, Color, CreateActionRow, CreateButton, CreateEmbed,
@@ -94,7 +93,7 @@ pub async fn send_start_embed<'a>(
     event: &String,
     event_id: &String,
     team: &char,
-) -> Result<(ReplyHandle<'a>, Vec<String>), Error> {
+) -> Result<Vec<String>, Error> {
     let invoke_embed = CreateEmbed::default()
         .color(Color::PURPLE)
         .title(format!("Start the {} test!", event));
@@ -105,12 +104,6 @@ pub async fn send_start_embed<'a>(
         .style(ButtonStyle::Success);
 
     let invoke_components = CreateActionRow::Buttons(vec![start_button]);
-
-    let builder = serenity::CreateInteractionResponse::UpdateMessage(
-        serenity::CreateInteractionResponseMessage::new()
-            .embed(invoke_embed.clone())
-            .components(vec![invoke_components.clone()]),
-    );
 
     let partners =
         crate::utils::user_handling::get_event_partners(event, &ctx.author().id.to_string(), team)?;
@@ -136,18 +129,16 @@ pub async fn send_start_embed<'a>(
     let oof =
         match partner_ids.len() {
             1 => {
-                ctx.say(format!(
+                format!(
                     "When you and your partner <@{}> is ready, please start the test <@{}>!",
                     partner_ids[0], &ctx.author().id
-                ))
-                .await?
+                )
             }
             2 => {
-                ctx.say(format!(
+                format!(
             "When you and your partners <@{}> and <@{}> are ready, please start the test <@{}>!",
              partner_ids[0], partner_ids[1], &ctx.author().id
-        ))
-                .await?
+        )
             }
             _ => return Err(
                 "You seem to have an incorrect amount of partners. Please contact an officer to fix this."
@@ -155,9 +146,14 @@ pub async fn send_start_embed<'a>(
             ),
         };
 
-    press.create_response(ctx, builder).await?;
+    let builder = serenity::EditInteractionResponse::new()
+        .content(oof)
+        .embed(invoke_embed)
+        .components(vec![invoke_components]);
 
-    Ok((oof, emails))
+    press.edit_response(ctx, builder).await?;
+
+    Ok(emails)
 }
 
 pub async fn send_test_embed(
@@ -165,15 +161,13 @@ pub async fn send_test_embed(
     press: &serenity::ComponentInteraction,
     reqinfo: (&String, &char),
     finish_id: &String,
-    emails: &Vec<String>,
+    mut emails: Vec<String>,
     sciolyhubs: (
         &google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
         &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
         &google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
     ),
-    reply: &ReplyHandle<'_>,
 ) -> Result<(String, Vec<(String, Permission)>), Error> {
-    reply.delete(ctx).await?;
     let (event, team) = reqinfo;
     let (sciolydocs, sciolydrive, sciolysheets) = sciolyhubs;
     let req = Document {
@@ -185,6 +179,8 @@ pub async fn send_test_embed(
         )),
         ..Default::default()
     };
+
+    let officer_emails = crate::utils::user_handling::get_officers_emails()?;
 
     let sheet_id = "1MutocwAPR2Fwzj8PC9rQP3QqYzfcb91-D3fNnzrJLeI";
 
@@ -227,16 +223,24 @@ pub async fn send_test_embed(
             &test_url[1..test_url.len() - 1]
         ));
 
-    let builder = serenity::CreateInteractionResponseFollowup::new()
+    let builder = serenity::EditInteractionResponse::new()
+        .content("")
         .embed(test_embed)
         .components(vec![test_components]);
 
-    press.create_followup(ctx, builder).await?;
+    press.edit_response(ctx, builder).await?;
+
+    for email in officer_emails {
+        if !emails.contains(&email) {
+            emails.push(email);
+        }
+    }
+
     let out = google::gdrive::change_perms(
         sciolydrive,
         &file_id,
         Perms::Editor(),
-        emails,
+        &emails,
         (false, &Permission::default()),
     )
     .await?;
@@ -248,9 +252,21 @@ pub async fn send_finish_embed(
     press: &serenity::ComponentInteraction,
     event: &String,
     finish_id: &String,
-    _scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
-    _file_id: &str,
+    permlist: &Vec<(String, Permission)>,
+    scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+    file_id: &str,
 ) -> Result<(), Error> {
+    for perm in permlist {
+        let (newemail, permission) = perm;
+        google::gdrive::change_perms(
+            scioly_drive,
+            file_id,
+            crate::utils::Perms::Viewer(),
+            &vec![newemail.to_string()],
+            (true, permission),
+        )
+        .await?;
+    }
     let finish_components = CreateActionRow::Buttons(vec![CreateButton::new(finish_id)
         .emoji('✅')
         .style(ButtonStyle::Primary)
@@ -261,13 +277,12 @@ pub async fn send_finish_embed(
         .color(GREEN)
         .title(format!("Your {} test has been submitted!", event));
 
-    let finish_builder = serenity::CreateInteractionResponseFollowup::new()
+    let finish_builder = serenity::EditInteractionResponse::new()
         .embed(finish_embed)
-        .components(vec![finish_components]);
+        .components(vec![finish_components])
+        .content("");
 
-    press
-        .create_followup(ctx.serenity_context(), finish_builder)
-        .await?;
+    press.edit_response(ctx, finish_builder).await?;
 
     Ok(())
 }

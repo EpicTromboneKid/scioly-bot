@@ -1,10 +1,11 @@
+use std::time::SystemTime;
+
 use crate::commands::embeds;
 use crate::commands::google;
 use crate::secrets;
 use crate::utils;
 use crate::utils::{Context, Error};
 use poise::serenity_prelude::{self as serenity};
-use poise::ReplyHandle;
 
 #[poise::command(
     prefix_command,
@@ -20,6 +21,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
         .format("%-I:%M %p UTC")
         .to_string();
     const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(3600);
+    const _EVENT_TIME: std::time::Duration = std::time::Duration::from_secs(18);
 
     let ctx_id = ctx.id();
     let mut file_id = String::new();
@@ -36,7 +38,6 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let finish_id = format!("{}finish", &ctx_id);
     let mut emails: Option<Vec<String>> = None;
 
-    let mut reply: Option<ReplyHandle> = None;
     let event_list = match utils::user_handling::find_user(&ctx.author().id.to_string()) {
         Ok(user) => user.events,
         Err(_) => std::panic::panic_any("No events found; please register with `/set_defaults`!, or check your roles in this server."),
@@ -59,42 +60,48 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
             embeds::send_abort_embed(ctx, &press).await?;
             break;
         } else if press.data.custom_id == the_event_id {
+            press.defer(ctx).await?;
             let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
 
             println!("in event_id");
-
-            let actual_reply = reply.as_mut().unwrap();
 
             (file_id, perms) = embeds::send_test_embed(
                 ctx,
                 &press,
                 (&the_event, &user.team),
                 &finish_id,
-                emails.as_ref().unwrap(),
+                emails.clone().unwrap(),
                 (&scioly_docs, &scioly_drive, &scioly_sheets),
-                actual_reply,
             )
             .await?;
+
+            ctx.set_invocation_data(utils::Data {
+                start_time: Some(SystemTime::now()),
+            })
+            .await;
+
+            println!(" hi there{:?}{:?}", ctx.data(), SystemTime::now());
+
             println!("in event_id {}", the_event_id);
         } else if press.data.custom_id == finish_id {
             press.defer(ctx).await?;
-            for perm in &perms {
-                let (newemail, permission) = perm;
-                google::gdrive::change_perms(
-                    &scioly_drive,
-                    &file_id,
-                    crate::utils::Perms::Viewer(),
-                    &vec![newemail.to_string()],
-                    (true, permission),
-                )
-                .await?;
-            }
-            embeds::send_finish_embed(ctx, &press, &the_event, &finish_id, &scioly_drive, &file_id)
-                .await?;
+
+            embeds::send_finish_embed(
+                ctx,
+                &press,
+                &the_event,
+                &finish_id,
+                &perms,
+                &scioly_drive,
+                &file_id,
+            )
+            .await?;
         } else if event_id_list
             .iter()
             .any(|(_, id)| id == &press.data.custom_id)
         {
+            press.defer(ctx).await?;
+
             let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
             let (event, event_id) = event_id_list
                 .iter()
@@ -102,9 +109,9 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
                 .unwrap();
             the_event = event.to_string();
             the_event_id = event_id.to_string();
+
             let stuff = embeds::send_start_embed(ctx, &press, event, event_id, &user.team).await?;
-            reply = Some(stuff.0);
-            emails = Some(stuff.1);
+            emails = Some(stuff);
             println!("event id: {}", the_event_id);
         } else {
             continue;

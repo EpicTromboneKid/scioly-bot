@@ -22,6 +22,6 @@ rust-fuzzy-search = "0.1.1"
 strum = "0.26.3"
 strum_macros = "0.26.4"
 google-docs1 = "*"
-# roux = "2.2.13"
 rand = "0.8.5"
 google-sheets4 = "*"
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git" }

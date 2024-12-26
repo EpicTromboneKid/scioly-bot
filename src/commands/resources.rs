@@ -45,11 +45,14 @@ pub async fn set_defaults(
     let member_roles = author_member.roles(ctx).unwrap();
     let mut roles = Vec::new();
     let mut team = 'z';
+    let mut officer = false;
 
     for role in member_roles {
         if role.name.contains("Team") && role.name.len() == 6 {
             team = role.name.chars().last().unwrap();
             println!("team: {}", team);
+        } else if role.name.contains("Officer") {
+            officer = true;
         }
         roles.push(role.name);
     }
@@ -70,6 +73,7 @@ pub async fn set_defaults(
             default_email: email.clone(),
             team,
             events: events.clone(),
+            officer,
         };
         users.push(new_user);
     }

@@ -7,6 +7,7 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
         command.as_deref(),
         poise::builtins::HelpConfiguration {
             extra_text_at_bottom: "made by epictrombonekid",
+            ephemeral: true,
             ..Default::default()
         },
     )

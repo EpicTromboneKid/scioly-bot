@@ -7,23 +7,11 @@ use poise::{
 };
 use rustls::crypto::{self};
 use scioly_bot::{
-    commands::{chat, help, register, resources, test_handler},
+    commands::{ai, chat, help, register, resources, test_handler},
     secrets,
     utils::{Data, Error},
 };
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-
-// Types used by all command functions
-//type Context<'a> = poise::Context<'a, Data, Error>;
-
-// Custom user data passed to all command functions
-//pub struct Data {
-//    _votes: Mutex<HashMap<String, u32>>,
-//}
+use std::{sync::Arc, time::Duration};
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
@@ -86,6 +74,7 @@ async fn main() {
 
     let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
     x.insert(poise::serenity_prelude::UserId::new(742791701986541599));
+
     let options = poise::FrameworkOptions {
         // commands go here lol
         //
@@ -99,6 +88,7 @@ async fn main() {
             resources::resources(),
             register::register_commands(),
             resources::set_defaults(),
+            ai::ai(),
         ],
         // commands go above this lol
         //
@@ -155,9 +145,7 @@ async fn main() {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
-                    _votes: Mutex::new(HashMap::new()),
-                })
+                Ok(Data { start_time: None })
             })
         })
         .options(options)
