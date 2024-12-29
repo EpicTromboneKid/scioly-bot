@@ -7,10 +7,11 @@ use poise::{
 };
 use rustls::crypto::{self};
 use scioly_bot::{
-    commands::{ai, chat, help, register, resources, test_handler},
+    commands::{chat, help, register, resources, test_handler},
     secrets,
     utils::{Data, Error, MODEL},
 };
+
 use std::{sync::Arc, time::Duration};
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -69,10 +70,10 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
-    //
-    let model = ai::initialize_model().await.unwrap();
 
-    let _ = MODEL.set(model);
+    //let model = ai::initialize_model().await.unwrap();
+    //
+    //let _ = MODEL.set(model);
 
     let _ = crypto::aws_lc_rs::default_provider().install_default();
     let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
@@ -87,7 +88,7 @@ async fn main() {
             resources::resources(),
             register::register_commands(),
             resources::set_defaults(),
-            ai::ai(),
+            //ai::ai(),
         ],
         // commands go above this lol
         prefix_options: poise::PrefixFrameworkOptions {

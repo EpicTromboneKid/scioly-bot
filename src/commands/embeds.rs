@@ -219,8 +219,9 @@ pub async fn send_test_embed(
         .title(format!("Answer Google Doc for {}", &event))
         .url(doc_url)
         .description(format!(
-            "This is the [link]({}) to the test",
-            &test_url[1..test_url.len() - 1]
+            "This is the [link]({}) to the test, you have until <t:{}:t> to complete it.",
+            &test_url[1..test_url.len() - 1],
+            chrono::Utc::now().timestamp() + 3000
         ));
 
     let builder = serenity::EditInteractionResponse::new()
