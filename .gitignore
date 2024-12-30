@@ -8,5 +8,7 @@ sciolybot-creds.json
 tokencachegdocs.json
 tokencachegsheets.json
 userdata.json
+serverdata.json
+/src/commands/progress_checks.rs
 reddit.rs
 

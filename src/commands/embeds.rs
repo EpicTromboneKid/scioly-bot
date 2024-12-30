@@ -1,5 +1,5 @@
 use crate::commands::google::{self, gsheets};
-use crate::utils::{Context, Error, Perms};
+use crate::utils::{self, Context, Error, Perms};
 use google_docs1::api::Document;
 
 use google_docs1::hyper_rustls::HttpsConnector;
@@ -49,6 +49,7 @@ pub async fn send_init_embed(
     invoke_time: &String,
     abort_id: &String,
 ) -> Result<(), Error> {
+    ctx.channel_id().broadcast_typing(ctx).await?;
     let mut actionrow = Vec::new();
     let invoke_footer = CreateEmbedFooter::new(format!(
         "Your invocation of this command was at {}.",
@@ -94,6 +95,7 @@ pub async fn send_start_embed<'a>(
     event_id: &String,
     team: &char,
 ) -> Result<Vec<String>, Error> {
+    ctx.channel_id().broadcast_typing(ctx).await?;
     let invoke_embed = CreateEmbed::default()
         .color(Color::PURPLE)
         .title(format!("Start the {} test!", event));
@@ -168,6 +170,7 @@ pub async fn send_test_embed(
         &google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
     ),
 ) -> Result<(String, Vec<(String, Permission)>), Error> {
+    ctx.channel_id().broadcast_typing(ctx).await?;
     let (event, team) = reqinfo;
     let (sciolydocs, sciolydrive, sciolysheets) = sciolyhubs;
     let req = Document {
@@ -180,8 +183,6 @@ pub async fn send_test_embed(
         ..Default::default()
     };
 
-    let officer_emails = crate::utils::user_handling::get_officers_emails()?;
-
     let sheet_id = "1MutocwAPR2Fwzj8PC9rQP3QqYzfcb91-D3fNnzrJLeI";
 
     let sheets = sciolysheets
@@ -192,7 +193,10 @@ pub async fn send_test_embed(
         .1
         .values
         .unwrap();
-    println!("{:?}", sheets);
+
+    emails.push(utils::server_handling::get_server_email(
+        &ctx.guild_id().unwrap().to_string(),
+    )?);
 
     let result = sciolydocs.documents().create(req).doit().await?;
 
@@ -231,12 +235,6 @@ pub async fn send_test_embed(
 
     press.edit_response(ctx, builder).await?;
 
-    for email in officer_emails {
-        if !emails.contains(&email) {
-            emails.push(email);
-        }
-    }
-
     let out = google::gdrive::change_perms(
         sciolydrive,
         &file_id,
@@ -257,6 +255,7 @@ pub async fn send_finish_embed(
     scioly_drive: &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
     file_id: &str,
 ) -> Result<(), Error> {
+    ctx.channel_id().broadcast_typing(ctx).await?;
     for perm in permlist {
         let (newemail, permission) = perm;
         google::gdrive::change_perms(

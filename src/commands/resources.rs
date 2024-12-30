@@ -89,3 +89,42 @@ pub async fn set_defaults(
 
     Ok(())
 }
+
+#[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
+pub async fn set_server_defaults(
+    ctx: Context<'_>,
+    club_email: String,
+) -> Result<(), crate::utils::Error> {
+    let server_id = ctx.guild_id().unwrap().to_string();
+    let server_name = ctx.guild().unwrap().name.to_string();
+    println!("guild id: {}", server_id);
+    println!("server name: {}", server_name);
+
+    let mut servers = crate::utils::server_handling::get_server_data("serverdata.json")?;
+
+    let server = servers
+        .servers
+        .iter_mut()
+        .find(|s| s.server_id == server_id);
+
+    if let Some(server) = server {
+        server.server_email = club_email.clone();
+    } else {
+        let new_server = crate::utils::server_handling::Server {
+            server_id,
+            server_name,
+            server_email: club_email.clone(),
+        };
+        servers.servers.push(new_server);
+    }
+
+    crate::utils::server_handling::write_server_data("serverdata.json", servers)?;
+
+    let _ = &ctx
+        .say(format!(
+            "Your server defaults have been set to: email: {}",
+            club_email
+        ))
+        .await?;
+    Ok(())
+}

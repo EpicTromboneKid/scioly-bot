@@ -88,6 +88,7 @@ async fn main() {
             resources::resources(),
             register::register_commands(),
             resources::set_defaults(),
+            resources::set_server_defaults(),
             //ai::ai(),
         ],
         // commands go above this lol
