@@ -11,7 +11,7 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 - **partner detection** and sharing when starting a test
 - automatic sharing with administrators
 - test administration configured by the administrator
-- automatic permission changing after time expires
+- automatic permission changing after time expires, with a reminder sent in channel at 5 minutes remaining
 - auto-test submission
 - and more!
 
