@@ -1,3 +1,3 @@
-# scioly-bot
+# SciolyBot: A Discord Bot for Automated Testing, built entirely in Rust.
 
 A science olympiad bot in the works. This bot allows you to take event tests automatically, only needing input at the start of every week to set the tests for the week. This bot can easily be adapted to other communities where taking tests/examinations is a crucial part of advancing in the community, only needing a couple of changes in order to function. Auto-role detection, along with auto-partner detection has been fully implemented. Tests are automatically sourced from a sheet which is currently unchangeable, but I will make it changeable later. I will also most likely add a progress check feature in the coming months, and maybe a few fun features as well!
