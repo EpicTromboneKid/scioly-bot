@@ -16,9 +16,9 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 - and more!
 
 ### ...and some features in the works!
-- []time tracking (timestamps of start and finish, etc.)
-- []progress checks through DMs
-- []and an ai chatbot to aid in grading and giving test feedback
+- [ ]time tracking (timestamps of start and finish, etc.)
+- [ ]progress checks through DMs
+- [ ]and an ai chatbot to aid in grading and giving test feedback
 (This is by no means an exhaustive list, and it will be updated as I plan more changes.)
 
 ### Final thoughts!
