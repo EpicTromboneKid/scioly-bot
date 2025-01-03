@@ -15,6 +15,7 @@ const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(360
     user_cooldown = 20
 )]
 
+/// Start a test! Be sure to set your defaults with `/set_defaults` first!
 pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let mut event_id_list = Vec::new();
     let invoke_time = chrono::Utc::now()
@@ -44,6 +45,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let mut the_event = String::new();
 
     while let Some(press) = serenity::collector::ComponentInteractionCollector::new(ctx)
+        .author_id(ctx.author().id)
         .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
         .timeout(TIMEOUT_DURATION)
         .await

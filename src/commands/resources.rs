@@ -5,6 +5,7 @@ use poise::{
     CreateReply,
 };
 
+/// List of some helpful resources for scioly
 #[poise::command(prefix_command, slash_command)]
 pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
     let ctx_id = ctx.id();

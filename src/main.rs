@@ -2,15 +2,46 @@
 
 use poise::{
     send_reply,
-    serenity_prelude::{self as serenity, CreateEmbedFooter, UserId},
+    serenity_prelude::{self as serenity, http, CreateEmbedFooter, UserId},
     CreateReply, FrameworkError,
 };
 use rustls::crypto::{self};
 use scioly_bot::{
-    commands::{chat, help, register, resources, test_handler},
+    commands::{
+        chat, help, moderation_tools, progress_checks, register, resources, test_handler, user,
+    },
     secrets,
-    utils::{Data, Error, MODEL},
+    utils::{Data, Error},
 };
+pub const BRAINROT_WORDS: [&str; 27] = [
+    "skibidi",
+    "rizz",
+    "gyatt",
+    "gyat",
+    "sigma",
+    "npc",
+    "cap",
+    "pov",
+    "sus",
+    "finsta",
+    "FYP",
+    "simp",
+    "yeet",
+    "bussin",
+    "flex",
+    "ghosting",
+    "clout",
+    "mid",
+    "slaps",
+    "ohio",
+    "sussy",
+    "fanum",
+    "gronk",
+    "livvy",
+    "maxxing",
+    "mog",
+    "galvanized square",
+];
 
 use std::{sync::Arc, time::Duration};
 
@@ -89,6 +120,11 @@ async fn main() {
             register::register_commands(),
             resources::set_defaults(),
             resources::set_server_defaults(),
+            progress_checks::sendprogchks(),
+            user::add(),
+            progress_checks::remind(),
+            moderation_tools::ban(),
+            moderation_tools::kick(),
             //ai::ai(),
         ],
         // commands go above this lol
@@ -159,7 +195,7 @@ async fn main() {
 }
 
 async fn event_handler(
-    _ctx: &serenity::Context,
+    ctx: &poise::serenity_prelude::Context,
     event: &serenity::FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,
     _data: &Data,
@@ -167,6 +203,44 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.name);
+        }
+        serenity::FullEvent::Message { new_message } => {
+            if new_message
+                .mention_roles
+                .contains(&serenity::RoleId::new(1324572846327988224))
+            {
+                println!("Someone mentioned the role!");
+                new_message
+                    .react(ctx, serenity::ReactionType::Unicode("👍".to_owned()))
+                    .await?;
+                new_message
+                    .react(ctx, serenity::ReactionType::Unicode("👎".to_owned()))
+                    .await?;
+            }
+
+            if new_message.author.id == serenity::UserId::new(742791701986541599) {
+                new_message
+                    .react(ctx, serenity::ReactionType::Unicode("🧐".to_owned()))
+                    .await?;
+            } else if new_message.author.id == serenity::UserId::new(711342969835356231) {
+                new_message
+                    .react(ctx, serenity::ReactionType::Unicode("🐐".to_owned()))
+                    .await?;
+            } else if new_message.author.id == serenity::UserId::new(737781806136295440) {
+                new_message
+                    .reply_ping(ctx, "# PHYSICS MAIN!!!!!!!!!")
+                    .await?;
+            }
+
+            if BRAINROT_WORDS
+                .iter()
+                .any(|word| new_message.content.to_lowercase().contains(word))
+            {
+                new_message.delete(ctx).await?;
+                new_message
+                    .reply_mention(ctx, "no brainrot words >:(")
+                    .await?;
+            }
         }
         _ => {
             println!("Got an event! {:?}", event.snake_case_name());

@@ -1,11 +1,11 @@
-use mistralrs::Model;
+//use mistralrs::Model;
 use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub type SharedModel = Arc<Mutex<Model>>;
-pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
+//pub type SharedModel = Arc<Mutex<Model>>;
+//pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
 
 #[derive(Debug)]
 pub struct Data {}
