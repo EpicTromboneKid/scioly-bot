@@ -21,6 +21,8 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 - and an ai chatbot to aid in grading and giving test feedback
 (This is by no means an exhaustive list, and it will be updated as I plan more changes.)
 
+### Final thoughts!
+If you want to try out this bot, send me a dm on discord @epictrombonekid. I haven't put the official add link here, because it's still not completely implemented and bug-free.
 If you'd like to propose any additional features/improvements/bug fixes, don't hesitate to make a pull request or open an issue!
 I'm open to any and all feedback :)
 
