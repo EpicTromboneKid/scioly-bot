@@ -6,10 +6,10 @@ SciolyBot is a discord bot for **automatic + unattended test administration**, w
 It is currently optimized for a workflow in Science Olympiad, but can be _easily adapted to other use cases_.
 
 ### Here are some currently supported features...
-- **auto-role detection** in servers to provide _personalized_ tests
+- **auto-role detection** in servers to provide _personalized_ tests ✏️
 - setting default emails for hassle-free use with google docs, where the answers are saved
 - **partner detection** and sharing when starting a test
-- automatic sharing with administrators
+- automatic sharing with administrators 🔗
 - test administration configured by the administrator
 - automatic permission changing after time expires, with a reminder sent in channel at 5 minutes remaining
 - auto-test submission
