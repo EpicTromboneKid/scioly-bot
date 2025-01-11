@@ -15,23 +15,6 @@ pub async fn sendprogchks(ctx: Context<'_>) -> Result<(), Error> {
 
     ctx.channel_id().broadcast_typing(ctx).await?;
 
-    let invoke_embed = CreateEmbed::default()
-        .description("Please select an event to start a test!")
-        .title("Start a test!");
-
-    let options = vec![CreateSelectMenuOption::new("what.", "1")];
-    let invoke_components = vec![CreateActionRow::SelectMenu(CreateSelectMenu::new(
-        "what.",
-        poise::serenity_prelude::CreateSelectMenuKind::String { options },
-    ))];
-
-    let invoke_reply = CreateReply::default()
-        .embed(invoke_embed)
-        .ephemeral(false)
-        .components(invoke_components);
-
-    let _ = ctx.send(invoke_reply).await?;
-
     for user in users {
         //let _ = &ctx
         //    .say(format!("User_id: {}, team: {}", user.userid, user.team,))
@@ -70,16 +53,23 @@ pub async fn remind(
 ) -> Result<(), Error> {
     let userid = user.id;
 
-    let name = match user.nick_in(ctx, ctx.guild_id().unwrap()).await {
+    let name = match ctx.author().nick_in(ctx, ctx.guild_id().unwrap()).await {
         Some(name) => name,
-        None => user.name.clone(),
+        None => ctx.author().name.clone(),
     };
 
-    let builder =
-        CreateMessage::new().content(format!("This is a reminder from {}: {}", name, message));
+    let builder = CreateMessage::new().content(format!("This is a reminder from {}:", name));
 
     userid.dm(ctx, builder).await?;
 
-    let _ = &ctx.say(format!("Reminder sent to {}!", user.name)).await?;
+    let builder = CreateMessage::new().content(message);
+
+    userid.dm(ctx, builder).await?;
+
+    let reply = CreateReply::default()
+        .content(format!("Reminder sent to {}!", user.name))
+        .ephemeral(true);
+
+    let _ = &ctx.send(reply).await?;
     Ok(())
 }

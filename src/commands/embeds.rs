@@ -261,7 +261,7 @@ pub async fn send_finish_embed(
         google::gdrive::change_perms(
             scioly_drive,
             file_id,
-            crate::utils::Perms::Viewer(),
+            crate::utils::Perms::Commenter(),
             &vec![newemail.to_string()],
             (true, permission),
         )
@@ -273,9 +273,10 @@ pub async fn send_finish_embed(
         .label("Submit Test")
         .disabled(true)]);
 
-    let finish_embed = CreateEmbed::default()
-        .color(GREEN)
-        .title(format!("Your {} test has been submitted!", event));
+    let finish_embed = CreateEmbed::default().color(GREEN).title(format!(
+        "Your {} test has been submitted! Here's the [key](https://www.google.com).",
+        event
+    ));
 
     let finish_builder = serenity::EditInteractionResponse::new()
         .embed(finish_embed)

@@ -24,7 +24,7 @@ pub const BRAINROT_WORDS: [&str; 27] = [
     "pov",
     "sus",
     "finsta",
-    "FYP",
+    "fyp",
     "simp",
     "yeet",
     "bussin",
@@ -226,11 +226,16 @@ async fn event_handler(
                 new_message
                     .react(ctx, serenity::ReactionType::Unicode("🐐".to_owned()))
                     .await?;
-            } else if new_message.author.id == serenity::UserId::new(737781806136295440) {
+            } else if new_message.author.id == serenity::UserId::new(773799550237278209) {
                 new_message
-                    .reply_ping(ctx, "# PHYSICS MAIN!!!!!!!!!")
+                    .react(ctx, serenity::ReactionType::Unicode("🫘".to_owned()))
                     .await?;
             }
+            //} else if new_message.author.id == serenity::UserId::new(737781806136295440) {
+            //    new_message
+            //        .reply_ping(ctx, "# PHYSICS MAIN!!!!!!!!!")
+            //        .await?;
+            //}
 
             if BRAINROT_WORDS
                 .iter()
