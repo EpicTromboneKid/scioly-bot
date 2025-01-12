@@ -1,4 +1,4 @@
-//pub mod ai;
+pub mod ai;
 pub mod chat;
 pub mod embeds;
 pub mod google;

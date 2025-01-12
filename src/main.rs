@@ -8,10 +8,10 @@ use poise::{
 use rustls::crypto::{self};
 use scioly_bot::{
     commands::{
-        chat, help, moderation_tools, progress_checks, register, resources, test_handler, user,
+        ai, chat, help, moderation_tools, progress_checks, register, resources, test_handler, user,
     },
     secrets,
-    utils::{Data, Error},
+    utils::{Data, Error, MODEL},
 };
 pub const BRAINROT_WORDS: [&str; 27] = [
     "skibidi",
@@ -102,9 +102,9 @@ async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
 
-    //let model = ai::initialize_model().await.unwrap();
-    //
-    //let _ = MODEL.set(model);
+    let model = ai::initialize_model().await.unwrap();
+
+    let _ = MODEL.set(model);
 
     let _ = crypto::aws_lc_rs::default_provider().install_default();
     let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
@@ -125,7 +125,7 @@ async fn main() {
             progress_checks::remind(),
             moderation_tools::ban(),
             moderation_tools::kick(),
-            //ai::ai(),
+            ai::ai(),
         ],
         // commands go above this lol
         prefix_options: poise::PrefixFrameworkOptions {
