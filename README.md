@@ -16,8 +16,9 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 - and more!
 
 ### ...and some features in the works!
-- [ ] time tracking (timestamps of start and finish, etc.)
-- [ ] progress checks through DMs
+- [ ] time tracking (timestamps of start and finish, etc.),
+- [ ] progress checks through DMs,
+- [ ] automatic team and event assignments through team rosters,
 - [ ] and an ai chatbot to aid in grading and giving test feedback!
 
 (This is by no means an exhaustive list, and it will be updated as I plan more changes.)
