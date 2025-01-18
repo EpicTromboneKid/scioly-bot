@@ -17,7 +17,7 @@ const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(360
 
 /// Start a test! Be sure to set your defaults with `/set_defaults` first!
 pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
-    let mut event_id_list = Vec::new();
+    let event_id_list = utils::user_handling::get_event_id_list(ctx)?;
     let invoke_time = chrono::Utc::now()
         .time()
         .format("%-I:%M %p UTC")
@@ -33,12 +33,6 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     let mut file_id = String::new();
     let mut perms = Vec::new();
 
-    let event_list = match utils::user_handling::find_user(&ctx.author().id.to_string()) { Ok(user) => user.events, Err(_) => std::panic::panic_any("No events found; please register with `/set_defaults`!, or check your roles in this server."), };
-
-    for event in event_list {
-        let event_id = format!("{}{}", &ctx.id(), &event);
-        event_id_list.push((event, event_id));
-    }
     embeds::send_init_embed(ctx, &event_id_list, &invoke_time, &abort_id).await?;
 
     let mut the_event_id = String::new();

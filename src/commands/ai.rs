@@ -7,6 +7,7 @@ pub async fn initialize_model() -> Result<crate::utils::SharedModel, crate::util
     let model = TextModelBuilder::new("microsoft/Phi-3.5-mini-instruct".to_string())
         .with_logging()
         .with_isq(mistralrs::IsqType::Q6K)
+        .with_dtype(mistralrs::ModelDType::F16)
         .build()
         .await?;
     println!("model after");
@@ -25,7 +26,7 @@ pub async fn ai(
     let messages = RequestBuilder::new()
         .add_message(
             TextMessageRole::System,
-            "limit your responses to 500 characters. You are helping high school students with general questions.",
+            "Limit your responses to 500 characters. You are helping high school students with general science questions.",
         )
         .add_message(TextMessageRole::User, &prompt);
 
@@ -45,6 +46,10 @@ pub async fn ai(
     while let Some(chunk) = stream.next().await {
         channelid.broadcast_typing(ctx).await?;
         if let Response::Chunk(chunk) = chunk {
+            if output.len() > 900 {
+                output.push_str("REPLY TRUNCATED; TOO LARGE");
+                break;
+            }
             if let Some(ref replyhandle) = reply_handle {
                 output.push_str(chunk.choices[0].delta.content.as_str());
                 let builder = CreateReply::default().content(&output);
@@ -56,5 +61,14 @@ pub async fn ai(
         }
     }
 
+    output.push_str(
+        "
+       
+*AI-generated content. Always make sure to verify with trusted sources.*",
+    );
+    if let Some(ref rh) = reply_handle {
+        let builder = CreateReply::default().content(output);
+        rh.edit(ctx, builder).await?;
+    }
     Ok(())
 }

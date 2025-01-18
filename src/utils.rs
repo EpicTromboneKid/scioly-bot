@@ -24,6 +24,7 @@ pub struct Thing {
 }
 
 pub mod user_handling {
+    use crate::utils::{Context, Error};
 
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SciolyUser {
@@ -101,6 +102,23 @@ pub mod user_handling {
             }
         }
         Ok(emails)
+    }
+    pub fn get_event_id_list(
+        ctx: Context<'_>,
+    ) -> Result<Vec<(String, String)>, crate::utils::Error> {
+        let mut event_id_list = Vec::new();
+        let event_list = match find_user(&ctx.author().id.to_string()) {
+            Ok(user) => user.events,
+            Err(_) => std::panic::panic_any(
+                "No events found; please register with `/set_defaults`!, or check your roles in this server.",
+            ),
+        };
+
+        for event in event_list {
+            let event_id = format!("{}{}", &ctx.id(), &event);
+            event_id_list.push((event, event_id));
+        }
+        Ok(event_id_list)
     }
 }
 
@@ -183,6 +201,12 @@ pub mod events {
         C,
     }
 
+    pub enum Types {
+        Build,
+        Hybrid,
+        Study,
+    }
+
     pub fn extract_events(event_vec: &Vec<String>) -> Vec<String> {
         let mut events = Vec::new();
         for role in event_vec {
@@ -204,6 +228,42 @@ pub mod events {
             //    println!("{:?} {:?}", event, score);
             //}
             Ok(events[0].0.to_string())
+        }
+    }
+
+    pub fn match_event_type(event: &str) -> Types {
+        match event {
+            "Air Trajectory" => Types::Build,
+            "Anatomy and Physiology" => Types::Study,
+            "Astronomy" => Types::Study,
+            "Bungee Drop" => Types::Build,
+            "Chemistry Lab" => Types::Hybrid,
+            "Codebusters" => Types::Study,
+            "Crime Busters" => Types::Study,
+            "Disease Detectives" => Types::Study,
+            "Dynamic Planet" => Types::Study,
+            "Ecology" => Types::Study,
+            "Electric Vehicle" => Types::Build,
+            "Entomology" => Types::Study,
+            "Experimental Design" => Types::Hybrid,
+            "Forensics" => Types::Hybrid,
+            "Fossils" => Types::Study,
+            "Geologic Mapping" => Types::Study,
+            "Helicopter" => Types::Build,
+            "Materials Science" => Types::Hybrid,
+            "Metric Mastery" => Types::Study,
+            "Microbe Mission" => Types::Study,
+            "Mission Possible" => Types::Build,
+            "Optics" => Types::Hybrid,
+            "Potions and Poisons" => Types::Study,
+            "Reach For The Stars" => Types::Study,
+            "Road Scholar" => Types::Study,
+            "Robot Tour" => Types::Build,
+            "Scrambler" => Types::Build,
+            "Tower" => Types::Build,
+            "Wind Power" => Types::Build,
+            "Write It Do It" => Types::Hybrid,
+            _ => Types::Study,
         }
     }
 }

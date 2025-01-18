@@ -120,12 +120,13 @@ async fn main() {
             register::register_commands(),
             resources::set_defaults(),
             resources::set_server_defaults(),
-            progress_checks::sendprogchks(),
+            progress_checks::spcr(),
             user::add(),
             progress_checks::remind(),
             moderation_tools::ban(),
             moderation_tools::kick(),
             ai::ai(),
+            progress_checks::pc(),
         ],
         // commands go above this lol
         prefix_options: poise::PrefixFrameworkOptions {
@@ -218,19 +219,20 @@ async fn event_handler(
                     .await?;
             }
 
-            if new_message.author.id == serenity::UserId::new(742791701986541599) {
-                new_message
-                    .react(ctx, serenity::ReactionType::Unicode("🧐".to_owned()))
-                    .await?;
-            } else if new_message.author.id == serenity::UserId::new(711342969835356231) {
-                new_message
-                    .react(ctx, serenity::ReactionType::Unicode("🐐".to_owned()))
-                    .await?;
-            } else if new_message.author.id == serenity::UserId::new(773799550237278209) {
-                new_message
-                    .react(ctx, serenity::ReactionType::Unicode("🫘".to_owned()))
-                    .await?;
-            }
+            //FUNNY STUFFS
+            //if new_message.author.id == serenity::UserId::new(742791701986541599) {
+            //    new_message
+            //        .react(ctx, serenity::ReactionType::Unicode("🧐".to_owned()))
+            //        .await?;
+            //} else if new_message.author.id == serenity::UserId::new(711342969835356231) {
+            //    new_message
+            //        .react(ctx, serenity::ReactionType::Unicode("🐐".to_owned()))
+            //        .await?;
+            //} else if new_message.author.id == serenity::UserId::new(773799550237278209) {
+            //    new_message
+            //        .react(ctx, serenity::ReactionType::Unicode("🫘".to_owned()))
+            //        .await?;
+            //}
             //} else if new_message.author.id == serenity::UserId::new(737781806136295440) {
             //    new_message
             //        .reply_ping(ctx, "# PHYSICS MAIN!!!!!!!!!")
