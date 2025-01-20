@@ -8,7 +8,8 @@ use poise::{
 use rustls::crypto::{self};
 use scioly_bot::{
     commands::{
-        ai, chat, help, moderation_tools, progress_checks, register, resources, test_handler, user,
+        ai, chat, help, moderation_tools, pc_handler as progress_checks, register, resources,
+        test_handler, user,
     },
     secrets,
     utils::{Data, Error, MODEL},

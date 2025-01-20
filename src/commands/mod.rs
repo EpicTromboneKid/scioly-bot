@@ -5,7 +5,7 @@ pub mod google;
 pub mod help;
 pub mod moderation_tools;
 pub mod pc;
-pub mod progress_checks;
+pub mod pc_handler;
 pub mod register;
 pub mod resources;
 pub mod test_handler;

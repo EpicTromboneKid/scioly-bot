@@ -67,9 +67,7 @@ pub mod user_handling {
     pub fn find_user(userid: &str) -> Result<SciolyUser, crate::utils::Error> {
         let users = get_user_data("userdata.json")?;
         for user in users {
-            println!("{:?}", user);
             if user.userid == userid {
-                println!("found user; email: {:?}", &user.default_email);
                 return Ok(user);
             }
         }
@@ -85,11 +83,9 @@ pub mod user_handling {
         let users = get_user_data("userdata.json")?;
         for user in users {
             if &user.team == team && user.events.contains(event) && user.userid != userid {
-                println!("found partner: {:?}", &user);
                 partners.push(user);
             }
         }
-        println!("partners: {:?}", &partners);
         Ok(partners)
     }
 

@@ -85,6 +85,8 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
     let prog_check_file_id = "1_ba7HMQUUVRWTPHi8DQLGWulvisxWn8fuyhqht8gaxw";
     let ctx_id = ctx.id();
     let mut event: Option<String> = None;
+    let user = user_handling::find_user(&ctx.author().id.to_string())?;
+    let team = user.team;
 
     // (event, event_id) is the format of the tuple
     let event_id_list = utils::user_handling::get_event_id_list(ctx)?;
@@ -113,7 +115,12 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
                     .to_string(),
             );
             press.message.delete(ctx).await?;
-            pc::pc_event_handling(ctx, &event.expect("no event")).await?;
+
+            let mut progress_check = pc::pc_event_handling(ctx, &event.expect("no event")).await?;
+
+            progress_check.team(team);
+
+            println!("{:?}", progress_check);
         }
     }
     Ok(())
