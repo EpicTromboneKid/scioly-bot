@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::utils::{self, Context, Error};
 
 use poise::serenity_prelude::{CreateInteractionResponseFollowup, EditInteractionResponse};
@@ -38,6 +40,16 @@ impl ProgressCheck {
     pub fn team(&mut self, team: char) {
         self.team = team.to_string();
     }
+    pub fn to_vec_values(&self) -> Result<Vec<serde_json::Value>, crate::utils::Error> {
+        Ok(vec![
+            serde_json::to_value(self.event.clone())?,
+            serde_json::to_value(self.team.clone())?,
+            serde_json::to_value(self.duration.clone())?,
+            serde_json::to_value(self.progress.clone())?,
+            serde_json::to_value(self.improvements.clone())?,
+            serde_json::to_value(self.timestamp.clone())?,
+        ])
+    }
 }
 
 pub async fn pc_start_embed(
@@ -64,7 +76,7 @@ pub async fn pc_start_embed(
     );
 
     let embed = CreateEmbed::default()
-        .title("Pick an event to start")
+        .title("Pick an event to start!")
         .footer(CreateEmbedFooter::new("run !help for help!"));
     let reply = CreateReply::default()
         .embed(embed)
@@ -138,7 +150,11 @@ pub async fn pc_event_handling(ctx: Context<'_>, event: &String) -> Result<Progr
         .await?,
     );
 
-    prog_check.timestamp(chrono::offset::Local::now().to_string());
+    prog_check.timestamp(
+        chrono::offset::Local::now()
+            .format("%B %d, %Y at %I:%M")
+            .to_string(),
+    );
     println!("{}", prog_check.timestamp);
 
     let confirmation_embed = CreateEmbed::default()

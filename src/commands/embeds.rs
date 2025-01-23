@@ -88,8 +88,8 @@ pub async fn send_init_embed(
     Ok(())
 }
 
-pub async fn send_start_embed<'a>(
-    ctx: Context<'a>,
+pub async fn send_start_embed(
+    ctx: Context<'_>,
     press: &serenity::ComponentInteraction,
     event: &String,
     event_id: &String,
@@ -158,17 +158,13 @@ pub async fn send_start_embed<'a>(
     Ok(emails)
 }
 
-pub async fn send_test_embed(
-    ctx: Context<'_>,
+pub async fn send_test_embed<'a>(
+    ctx: Context<'a>,
     press: &serenity::ComponentInteraction,
     reqinfo: (&String, &char),
     finish_id: &String,
     mut emails: Vec<String>,
-    sciolyhubs: (
-        &google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
-        &google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
-        &google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
-    ),
+    sciolyhubs: &utils::SciolyHubs<'a>,
 ) -> Result<(String, Vec<(String, Permission)>), Error> {
     ctx.channel_id().broadcast_typing(ctx).await?;
     let (event, team) = reqinfo;
@@ -183,30 +179,29 @@ pub async fn send_test_embed(
         ..Default::default()
     };
 
-    let sheet_id = "1MutocwAPR2Fwzj8PC9rQP3QqYzfcb91-D3fNnzrJLeI";
+    let sheet_id =
+        utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.tests_file_id;
 
     let sheets = sciolysheets
         .spreadsheets()
-        .values_get(sheet_id, "'test-sheet'!B:C")
+        .values_get(&sheet_id, "'test-sheet'!B:C")
         .doit()
         .await?
         .1
         .values
         .unwrap();
 
-    emails.push(utils::server_handling::get_server_email(
-        &ctx.guild_id().unwrap().to_string(),
-    )?);
+    emails.push(
+        utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
+    );
 
     let result = sciolydocs.documents().create(req).doit().await?;
 
     let file_id = result.1.document_id.expect("where is the doc id?");
     // insert link to answer doc here
     let doc_url: String = format!("https://docs.google.com/document/d/{}/edit", file_id);
-    //println!("{doc_url}");
 
-    // insert link to test here; must be input onto a sheet ig
-    let test_url = match gsheets::get_test_link(event, sheets) {
+    let test_url = match gsheets::get_link(event, sheets) {
         Some(url) => url,
         None => {
             return Err("Test URL not found, let one of the officers know.".into());
@@ -273,10 +268,10 @@ pub async fn send_finish_embed(
         .label("Submit Test")
         .disabled(true)]);
 
-    let finish_embed = CreateEmbed::default().color(GREEN).title(format!(
-        "Your {} test has been submitted! Here's the [key](https://www.google.com).",
-        event
-    ));
+    let finish_embed = CreateEmbed::default()
+        .color(GREEN)
+        .title(format!("Your {} test has been submitted! ", event))
+        .description("You can view the key [here](https://www.google.com).".to_string());
 
     let finish_builder = serenity::EditInteractionResponse::new()
         .embed(finish_embed)

@@ -58,7 +58,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
                 (&the_event, &user.team),
                 &finish_id,
                 emails.clone().unwrap(),
-                (&scioly_docs, &scioly_drive, &scioly_sheets),
+                &(&scioly_docs, &scioly_drive, &scioly_sheets),
             )
             .await?;
 

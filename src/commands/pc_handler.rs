@@ -1,12 +1,10 @@
 use crate::commands::{google, pc};
 use crate::secrets;
 use crate::utils::{self, Context, Error};
-use poise::serenity_prelude::{
-    self as serenity, CreateActionRow, CreateEmbed, CreateMessage, CreateSelectMenu,
-    CreateSelectMenuOption, MessageFlags, UserId,
-};
+use poise::serenity_prelude::{self as serenity, CreateMessage, MessageFlags, UserId};
 
 use poise::CreateReply;
+use server_handling::get_server;
 
 use crate::utils::*;
 
@@ -80,11 +78,11 @@ pub async fn remind(
 
 #[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
-    let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
+    //let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
     let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
-    let prog_check_file_id = "1_ba7HMQUUVRWTPHi8DQLGWulvisxWn8fuyhqht8gaxw";
+    let prog_check_file_id = get_server(&ctx.guild_id().unwrap().to_string())?.pc_file_id;
     let ctx_id = ctx.id();
-    let mut event: Option<String> = None;
+    let mut event: Option<String>;
     let user = user_handling::find_user(&ctx.author().id.to_string())?;
     let team = user.team;
 
@@ -116,11 +114,30 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
             );
             press.message.delete(ctx).await?;
 
-            let mut progress_check = pc::pc_event_handling(ctx, &event.expect("no event")).await?;
+            let mut progress_check =
+                pc::pc_event_handling(ctx, event.as_ref().expect("no event")).await?;
 
             progress_check.team(team);
 
             println!("{:?}", progress_check);
+
+            let range = format!("'Team {} Build'!A:F", team);
+
+            scioly_sheets
+                .spreadsheets()
+                .values_append(
+                    google_sheets4::api::ValueRange {
+                        range: Some(range.clone()),
+                        major_dimension: Some("ROWS".to_string()),
+                        values: Some(vec![progress_check.to_vec_values()?]),
+                    },
+                    &prog_check_file_id,
+                    &range,
+                )
+                .value_input_option("RAW")
+                .insert_data_option("INSERT_ROWS")
+                .doit()
+                .await?;
         }
     }
     Ok(())

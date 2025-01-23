@@ -1,9 +1,16 @@
+use google_docs1::hyper_rustls::HttpsConnector;
+use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
 use mistralrs::Model;
 use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub type SharedModel = Arc<Mutex<Model>>;
+pub type SciolyHubs<'a> = (
+    &'a google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
+    &'a google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
+    &'a google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
+);
 pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
 
 #[derive(Debug)]
@@ -47,16 +54,13 @@ pub mod user_handling {
         }
     }
 
-    pub fn get_user_data(file_path: &str) -> Result<Vec<SciolyUser>, crate::utils::Error> {
+    pub fn get_user_data(file_path: &str) -> Result<Vec<SciolyUser>, Error> {
         let data = std::fs::read_to_string(file_path).unwrap();
         let users: crate::utils::Thing = serde_json::from_str(&data).unwrap();
         Ok(users.users)
     }
 
-    pub fn write_user_data(
-        file_path: &str,
-        users: Vec<SciolyUser>,
-    ) -> Result<(), crate::utils::Error> {
+    pub fn write_user_data(file_path: &str, users: Vec<SciolyUser>) -> Result<(), Error> {
         std::fs::write(
             file_path,
             serde_json::to_string(&crate::utils::Thing { users })?,
@@ -64,7 +68,7 @@ pub mod user_handling {
         Ok(())
     }
 
-    pub fn find_user(userid: &str) -> Result<SciolyUser, crate::utils::Error> {
+    pub fn find_user(userid: &str) -> Result<SciolyUser, Error> {
         let users = get_user_data("userdata.json")?;
         for user in users {
             if user.userid == userid {
@@ -78,7 +82,7 @@ pub mod user_handling {
         event: &String,
         userid: &str,
         team: &char,
-    ) -> Result<Vec<SciolyUser>, crate::utils::Error> {
+    ) -> Result<Vec<SciolyUser>, Error> {
         let mut partners = Vec::new();
         let users = get_user_data("userdata.json")?;
         for user in users {
@@ -89,7 +93,7 @@ pub mod user_handling {
         Ok(partners)
     }
 
-    pub fn get_officers_emails() -> Result<Vec<String>, crate::utils::Error> {
+    pub fn get_officers_emails() -> Result<Vec<String>, Error> {
         let mut emails = Vec::new();
         let users = get_user_data("userdata.json")?;
         for user in users {
@@ -99,9 +103,7 @@ pub mod user_handling {
         }
         Ok(emails)
     }
-    pub fn get_event_id_list(
-        ctx: Context<'_>,
-    ) -> Result<Vec<(String, String)>, crate::utils::Error> {
+    pub fn get_event_id_list(ctx: Context<'_>) -> Result<Vec<(String, String)>, Error> {
         let mut event_id_list = Vec::new();
         let event_list = match find_user(&ctx.author().id.to_string()) {
             Ok(user) => user.events,
@@ -119,11 +121,14 @@ pub mod user_handling {
 }
 
 pub mod server_handling {
+    use crate::utils::Error;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Server {
         pub server_id: String,
         pub server_name: String,
         pub server_email: String,
+        pub tests_file_id: String,
+        pub pc_file_id: String,
     }
 
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -131,25 +136,22 @@ pub mod server_handling {
         pub servers: Vec<Server>,
     }
 
-    pub fn get_server_data(file_path: &str) -> Result<AllData, crate::utils::Error> {
+    pub fn get_server_data(file_path: &str) -> Result<AllData, Error> {
         let data = std::fs::read_to_string(file_path).unwrap();
         let server: AllData = serde_json::from_str(&data).unwrap();
         Ok(server)
     }
 
-    pub fn write_server_data(
-        file_path: &str,
-        to_write: AllData,
-    ) -> Result<(), crate::utils::Error> {
+    pub fn write_server_data(file_path: &str, to_write: AllData) -> Result<(), Error> {
         std::fs::write(file_path, serde_json::to_string(&to_write)?)?;
         Ok(())
     }
 
-    pub fn get_server_email(server_id: &str) -> Result<String, crate::utils::Error> {
+    pub fn get_server(server_id: &str) -> Result<Server, Error> {
         let servers = get_server_data("serverdata.json")?;
         for server in servers.servers {
             if server.server_id == server_id {
-                return Ok(server.server_email);
+                return Ok(server);
             }
         }
         Err("Server not found".into())

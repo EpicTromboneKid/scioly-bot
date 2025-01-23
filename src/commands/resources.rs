@@ -94,7 +94,10 @@ pub async fn set_defaults(
 #[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn set_server_defaults(
     ctx: Context<'_>,
-    club_email: String,
+    #[description = "default email to use with the bot"] server_email: String,
+    #[description = "file id of the google sheet that contains the tests"] tests_file_id: String,
+    #[description = "file id of the google sheet that the progress checks will be written to"]
+    pc_file_id: String,
 ) -> Result<(), crate::utils::Error> {
     let server_id = ctx.guild_id().unwrap().to_string();
     let server_name = ctx.guild().unwrap().name.to_string();
@@ -109,12 +112,16 @@ pub async fn set_server_defaults(
         .find(|s| s.server_id == server_id);
 
     if let Some(server) = server {
-        server.server_email = club_email.clone();
+        server.server_email = server_email.trim().to_string();
+        server.tests_file_id = tests_file_id.trim().to_string();
+        server.pc_file_id = pc_file_id.trim().to_string();
     } else {
         let new_server = crate::utils::server_handling::Server {
-            server_id,
+            server_id: server_id.clone(),
             server_name,
-            server_email: club_email.clone(),
+            server_email: server_email.trim().to_string(),
+            tests_file_id: tests_file_id.trim().to_string(),
+            pc_file_id: pc_file_id.trim().to_string(),
         };
         servers.servers.push(new_server);
     }
@@ -123,8 +130,8 @@ pub async fn set_server_defaults(
 
     let _ = &ctx
         .say(format!(
-            "Your server defaults have been set to: email: {}",
-            club_email
+            "Your server defaults have been set to: email: {} {} {}",
+            &server_email, &tests_file_id, &pc_file_id
         ))
         .await?;
     Ok(())

@@ -143,7 +143,7 @@ pub mod gsheets {
         Ok(sheets4::Sheets::new(client, auth))
     }
 
-    pub fn get_test_link(event: &str, values: Vec<Vec<serde_json::Value>>) -> Option<String> {
+    pub fn get_link(event: &str, values: Vec<Vec<serde_json::Value>>) -> Option<String> {
         for row in values {
             println!("{:?}", row);
             if !row.is_empty() && row[0] == event {

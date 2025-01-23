@@ -1,3 +1,4 @@
+pub mod admin_only;
 pub mod ai;
 pub mod chat;
 pub mod embeds;
@@ -6,7 +7,6 @@ pub mod help;
 pub mod moderation_tools;
 pub mod pc;
 pub mod pc_handler;
-pub mod register;
 pub mod resources;
 pub mod test_handler;
 pub mod user;
