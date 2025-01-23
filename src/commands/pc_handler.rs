@@ -121,7 +121,11 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
 
             println!("{:?}", progress_check);
 
-            let range = format!("'Team {} Build'!A:F", team);
+            let range = format!(
+                "'Team {} {}'!B:G",
+                team,
+                utils::events::match_event_type(event.as_ref().unwrap())
+            );
 
             scioly_sheets
                 .spreadsheets()

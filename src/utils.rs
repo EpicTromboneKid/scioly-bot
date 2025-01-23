@@ -160,6 +160,7 @@ pub mod server_handling {
 
 pub mod events {
     use rust_fuzzy_search::fuzzy_search_sorted;
+    use strum::Display;
 
     static EVENT_LIST: [&str; 30] = [
         "Air Trajectory",
@@ -199,6 +200,7 @@ pub mod events {
         C,
     }
 
+    #[derive(Debug, Display)]
     pub enum Types {
         Build,
         Hybrid,
