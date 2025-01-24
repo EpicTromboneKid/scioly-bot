@@ -12,12 +12,12 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 - automatic sharing with administrators 🔗
 - test administration configured by the administrator
 - automatic permission changing after time expires, with a reminder sent in channel at 5 minutes remaining
-- auto-test submission
+- auto-test submission,
+- progress checks,
 - and more!
 
 ### ...and some features in the works!
 - [ ] time tracking (timestamps of start and finish, etc.),
-- [ ] progress checks through DMs,
 - [ ] automatic team and event assignments through team rosters,
 - [ ] and an ai chatbot to aid in grading and giving test feedback!
 
