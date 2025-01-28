@@ -1,9 +1,5 @@
-use std::fmt::Display;
+use crate::utils::{Context, Error};
 
-use crate::utils::{self, Context, Error};
-
-use poise::serenity_prelude::{CreateInteractionResponseFollowup, EditInteractionResponse};
-use poise::ReplyHandle;
 use poise::{
     serenity_prelude::{
         self as serenity, ButtonStyle, Color, CreateActionRow, CreateButton, CreateEmbed,
@@ -20,6 +16,7 @@ pub struct ProgressCheck {
     improvements: String,
     timestamp: String,
     team: String,
+    other: String,
 }
 impl ProgressCheck {
     pub fn event(&mut self, event: String) {
@@ -40,6 +37,9 @@ impl ProgressCheck {
     pub fn team(&mut self, team: char) {
         self.team = team.to_string();
     }
+    pub fn other(&mut self, other: String) {
+        self.other = other;
+    }
     pub fn to_vec_values(&self) -> Result<Vec<serde_json::Value>, crate::utils::Error> {
         Ok(vec![
             serde_json::to_value(self.event.clone())?,
@@ -48,6 +48,7 @@ impl ProgressCheck {
             serde_json::to_value(self.progress.clone())?,
             serde_json::to_value(self.improvements.clone())?,
             serde_json::to_value(self.timestamp.clone())?,
+            serde_json::to_value(self.other.clone())?,
         ])
     }
 }
@@ -150,9 +151,19 @@ pub async fn pc_event_handling(ctx: Context<'_>, event: &String) -> Result<Progr
         .await?,
     );
 
+    prog_check.other(
+        send_questions(
+            &ctx,
+            &replyhandle,
+            "Anything else you'd like to let us know?".to_string(),
+            &"".to_string(),
+        )
+        .await?,
+    );
+
     prog_check.timestamp(
         chrono::offset::Local::now()
-            .format("%B %d, %Y at %I:%M")
+            .format("%B %d, %Y at %I:%M %P")
             .to_string(),
     );
     println!("{}", prog_check.timestamp);
@@ -160,8 +171,8 @@ pub async fn pc_event_handling(ctx: Context<'_>, event: &String) -> Result<Progr
     let confirmation_embed = CreateEmbed::default()
         .title(format!("Confirm that your Progress Check for {} is correct: ", event))
         .description(format!(
-            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n",
-            prog_check.duration, prog_check.progress, prog_check.improvements
+            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n, 4. Notes: {}\n",
+            prog_check.duration, prog_check.progress, prog_check.improvements, prog_check.other
         ))
         .color(poise::serenity_prelude::Color::DARK_ORANGE)
         .footer(CreateEmbedFooter::new(
@@ -304,6 +315,18 @@ async fn edit_answers(
                     .unwrap(),
                 );
                 let _ = send_confirmation(ctx, press, prog_check).await;
+            } else if answer == "4" {
+                prog_check.other(
+                    send_questions(
+                        ctx,
+                        replyhandle,
+                        "Anything else you'd like to let us know?".to_string(),
+                        &"".to_string(),
+                    )
+                    .await
+                    .unwrap(),
+                );
+                let _ = send_confirmation(ctx, press, prog_check).await;
             } else {
                 let _ = ctx.say(
                 "Invalid input. Please type the number of the question you would like to change.",
@@ -327,12 +350,12 @@ async fn send_confirmation(
     let confirmation_embed = CreateEmbed::default()
         .title(format!("Confirm that your Progress Check for {} is correct: ", prog_check.event))
         .description(format!(
-            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n",
-            prog_check.duration, prog_check.progress, prog_check.improvements
+            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n, 4. Notes: {}\n",
+            prog_check.duration, prog_check.progress, prog_check.improvements, prog_check.other
         ))
         .color(poise::serenity_prelude::Color::DARK_ORANGE)
         .footer(CreateEmbedFooter::new(
-            "If you would like to change any of the above answers, type the number of the question you would like to change after pressing ❌'.",
+            "If you would like to change any of the above answers, type the number of the question you would like to change!'.",
         ));
 
     let reply = CreateReply::default()

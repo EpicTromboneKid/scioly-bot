@@ -122,7 +122,7 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
             println!("{:?}", progress_check);
 
             let range = format!(
-                "'Team {} {}'!B:G",
+                "'Team {} {}'!B:H",
                 team,
                 utils::events::match_event_type(event.as_ref().unwrap())
             );

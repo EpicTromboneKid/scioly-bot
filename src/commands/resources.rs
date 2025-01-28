@@ -36,7 +36,7 @@ pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 /// This sets your default email for the bot, which you provide; everything else is auto-detected.
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(prefix_command, slash_command, rename = "sd")]
 pub async fn set_defaults(
     ctx: Context<'_>,
     #[description = "default email to use with the bot"] email: String,
@@ -91,7 +91,12 @@ pub async fn set_defaults(
     Ok(())
 }
 
-#[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    required_permissions = "MANAGE_GUILD",
+    rename = "ssd"
+)]
 pub async fn set_server_defaults(
     ctx: Context<'_>,
     #[description = "default email to use with the bot"] server_email: String,
