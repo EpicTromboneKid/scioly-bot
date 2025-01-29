@@ -24,4 +24,5 @@ strum_macros = "0.26.4"
 google-docs1 = "*"
 rand = "0.9.0"
 google-sheets4 = "*"
+mistralrs = { path = "./mistral.rs/"}
 # roux = "2.2.13"
