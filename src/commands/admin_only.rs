@@ -1,5 +1,3 @@
-use crate::secrets;
-
 #[poise::command(prefix_command, track_edits, slash_command, owners_only, hide_in_help)]
 pub async fn register_commands(ctx: crate::utils::Context<'_>) -> Result<(), crate::utils::Error> {
     poise::builtins::register_application_commands_buttons(ctx).await?;
@@ -11,8 +9,12 @@ pub async fn delete_file(
     _ctx: crate::utils::Context<'_>,
     file_id: String,
 ) -> Result<(), crate::utils::Error> {
-    let drive =
-        crate::commands::google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
+    let drive = crate::commands::google::gdrive::instantiate_hub(
+        std::env::var("SERVICE_ACCOUNT_CREDS")
+            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
+            .as_str(),
+    )
+    .await?;
 
     let (_, about) = drive.about().get().param("fields", "*").doit().await?;
 
