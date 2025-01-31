@@ -27,6 +27,9 @@ It is currently optimized for a workflow in Science Olympiad, but can be _easily
 >[!NOTE]
 >If you want to try out this bot, send me a dm on discord @epictrombonekid. I haven't put the official add link here, because it's still not completely implemented and bug-free.
 
+>[!CAUTION]
+>If you're here from crates.io, be sure to set the BOT_TOKEN and SERVICE_ACCOUNT_CREDS account variables. The BOT_TOKEN should be a string, and the SERVICE_ACCOUNT_CREDS should be the path to a service account json file.
+
 If you'd like to propose any additional features/improvements/bug fixes, don't hesitate to make a pull request or open an issue!
 I'm open to any and all feedback :)
 
