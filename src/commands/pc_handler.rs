@@ -79,7 +79,12 @@ pub async fn remind(
 #[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
     //let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
+    let scioly_sheets = google::gsheets::instantiate_hub(
+        std::env::var("SERVICE_ACCOUNT_CREDS")
+            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
+            .as_str(),
+    )
+    .await?;
     let prog_check_file_id = get_server(&ctx.guild_id().unwrap().to_string())?.pc_file_id;
     let ctx_id = ctx.id();
     let mut event: Option<String>;
