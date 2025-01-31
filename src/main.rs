@@ -18,7 +18,7 @@ use scioly_bot::{
         user,
     },
     secrets,
-    utils::{Data, Error, MODEL},
+    utils::{Data, Error},
 };
 pub const BRAINROT_WORDS: [&str; 27] = [
     "skibidi",
@@ -191,7 +191,7 @@ async fn main() {
         })
         .options(options)
         .build();
-    let token = secrets::discord_api_key();
+    let token = std::env::var("BOT_TOKEN").expect("please set the BOT_TOKEN environment variable");
     let intents =
         serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
 
