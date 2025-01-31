@@ -1,5 +1,5 @@
 pub mod admin_only;
-pub mod ai;
+//pub mod ai;
 pub mod chat;
 pub mod embeds;
 pub mod google;

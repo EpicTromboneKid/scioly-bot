@@ -1,3 +1,0 @@
-[submodule "mistral.rs"]
-	path = mistral.rs
-	url = https://github.com/EricLBuehler/mistral.rs
