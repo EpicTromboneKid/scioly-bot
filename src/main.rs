@@ -17,7 +17,6 @@ use scioly_bot::{
         test_handler,
         user,
     },
-    secrets,
     utils::{Data, Error},
 };
 pub const BRAINROT_WORDS: [&str; 27] = [
