@@ -2081,7 +2081,7 @@ dependencies = [
 
 [[package]]
 name = "scioly-bot"
-version = "0.0.3"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "google-docs1",

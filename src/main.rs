@@ -8,8 +8,14 @@ use poise::{
 use rustls::crypto::{self};
 use scioly_bot::{
     commands::{
-        admin_only as register, ai, chat, help, moderation_tools, pc_handler as progress_checks,
-        resources, test_handler, user,
+        admin_only as register, //ai,
+        chat,
+        help,
+        moderation_tools,
+        pc_handler as progress_checks,
+        resources,
+        test_handler,
+        user,
     },
     secrets,
     utils::{Data, Error, MODEL},
@@ -103,9 +109,9 @@ async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
 
-    let model = ai::initialize_model().await.unwrap();
-
-    let _ = MODEL.set(model);
+    //let model = ai::initialize_model().await.unwrap();
+    //
+    //let _ = MODEL.set(model);
 
     let _ = crypto::aws_lc_rs::default_provider().install_default();
     let mut x: std::collections::HashSet<UserId> = std::collections::HashSet::new();
@@ -126,7 +132,7 @@ async fn main() {
             progress_checks::remind(),
             moderation_tools::ban(),
             moderation_tools::kick(),
-            ai::ai(),
+            //ai::ai(),
             progress_checks::pc(),
         ],
         // commands go above this lol
