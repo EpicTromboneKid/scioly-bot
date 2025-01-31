@@ -11,4 +11,4 @@ userdata.json
 serverdata.json
 # /src/commands/progress_checks.rs
 reddit.rs
-/src/commands/user.rs
+# /src/commands/user.rs
