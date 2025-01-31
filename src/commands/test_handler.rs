@@ -25,9 +25,24 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     const EVENT_TIME: u32 = 3000;
     let ctx_id = ctx.id();
     let abort_id = format!("{}abort", &ctx_id);
-    let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_docs = google::gdocs::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
+    let scioly_drive = google::gdrive::instantiate_hub(
+        std::env::var("SERVICE_ACCOUNT_CREDS")
+            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
+            .as_str(),
+    )
+    .await?;
+    let scioly_docs = google::gdocs::instantiate_hub(
+        std::env::var("SERVICE_ACCOUNT_CREDS")
+            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
+            .as_str(),
+    )
+    .await?;
+    let scioly_sheets = google::gsheets::instantiate_hub(
+        std::env::var("SERVICE_ACCOUNT_CREDS")
+            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
+            .as_str(),
+    )
+    .await?;
     let finish_id = format!("{}finish", &ctx_id);
     let mut emails: Option<Vec<String>> = None;
     let mut file_id = String::new();
