@@ -1,17 +1,17 @@
 use google_docs1::hyper_rustls::HttpsConnector;
 use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
-use mistralrs::Model;
+//use mistralrs::Model;
 use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub type SharedModel = Arc<Mutex<Model>>;
+//pub type SharedModel = Arc<Mutex<Model>>;
 pub type SciolyHubs<'a> = (
     &'a google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
     &'a google_drive3::api::DriveHub<HttpsConnector<HttpConnector>>,
     &'a google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
 );
-pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
+//pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
 
 #[derive(Debug)]
 pub struct Data {}
@@ -160,7 +160,6 @@ pub mod server_handling {
 
 pub mod events {
     use rust_fuzzy_search::fuzzy_search_sorted;
-    use strum::Display;
 
     static EVENT_LIST: [&str; 30] = [
         "Air Trajectory",
@@ -200,11 +199,21 @@ pub mod events {
         C,
     }
 
-    #[derive(Debug, Display)]
+    #[derive(Debug)]
     pub enum Types {
         Build,
         Hybrid,
         Study,
+    }
+
+    impl std::fmt::Display for Types {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            match self {
+                Types::Build => write!(f, "Build"),
+                Types::Hybrid => write!(f, "Hybrid"),
+                Types::Study => write!(f, "Study"),
+            }
+        }
     }
 
     pub fn extract_events(event_vec: &Vec<String>) -> Vec<String> {
