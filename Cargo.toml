@@ -2,6 +2,12 @@
 name = "scioly-bot"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "A Discord bot for Science Olympiad, easily adaptable to other use cases."  
+repository = "https://www.github.com/EpicTromboneKid/scioly-bot"
+homepage = "https://www.github.com/EpicTromboneKid/scioly-bot"
+readme = "README.md"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
