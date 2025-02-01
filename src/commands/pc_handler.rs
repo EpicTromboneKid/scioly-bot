@@ -76,7 +76,7 @@ pub async fn remind(
     Ok(())
 }
 
-#[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
+#[poise::command(prefix_command, slash_command)]
 pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
     //let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
     let scioly_sheets = google::gsheets::instantiate_hub(
