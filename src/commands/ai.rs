@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub async fn initialize_model() -> Result<crate::utils::SharedModel, crate::utils::Error> {
-    let model = TextModelBuilder::new("microsoft/Phi-3.5-mini-instruct".to_string())
+    let model = TextModelBuilder::new("deepseek-ai/DeepSeek-V3".to_string())
         .with_logging()
         .with_isq(mistralrs::IsqType::Q6K)
         .with_dtype(mistralrs::ModelDType::F16)
