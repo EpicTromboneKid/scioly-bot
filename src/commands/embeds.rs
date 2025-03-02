@@ -253,6 +253,11 @@ pub async fn send_finish_embed(
     ctx.channel_id().broadcast_typing(ctx).await?;
     for perm in permlist {
         let (newemail, permission) = perm;
+        if newemail.eq(
+            &utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
+        ) {
+            continue;
+        }
         google::gdrive::change_perms(
             scioly_drive,
             file_id,
@@ -273,12 +278,12 @@ pub async fn send_finish_embed(
         .title(format!("Your {} test has been submitted! ", event))
         .description("You can view the key [here](https://www.google.com).".to_string());
 
-    let finish_builder = serenity::EditInteractionResponse::new()
+    let finish_builder = serenity::CreateInteractionResponseFollowup::new()
         .embed(finish_embed)
         .components(vec![finish_components])
         .content("");
 
-    press.edit_response(ctx, finish_builder).await?;
+    press.create_followup(ctx, finish_builder).await?;
 
     Ok(())
 }
