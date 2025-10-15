@@ -1,5 +1,8 @@
 use google_docs1::hyper_rustls::HttpsConnector;
 use google_docs1::hyper_util::client::legacy::connect::HttpConnector;
+use std::collections::BinaryHeap;
+
+use crate::commands::reminder::Reminder;
 //use mistralrs::Model;
 use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
@@ -12,6 +15,8 @@ pub type SciolyHubs<'a> = (
     &'a google_sheets4::api::Sheets<HttpsConnector<HttpConnector>>,
 );
 //pub static MODEL: OnceCell<SharedModel> = OnceCell::const_new();
+
+pub static REMINDER_QUEUE: OnceCell<Arc<Mutex<BinaryHeap<Reminder>>>> = OnceCell::const_new();
 
 #[derive(Debug)]
 pub struct Data {}
@@ -161,37 +166,30 @@ pub mod server_handling {
 pub mod events {
     use rust_fuzzy_search::fuzzy_search_sorted;
 
-    static EVENT_LIST: [&str; 30] = [
-        "Air Trajectory",
+    static EVENT_LIST: [&str; 23] = [
         "Anatomy and Physiology",
         "Astronomy",
+        "Boomilever",
         "Bungee Drop",
         "Chemistry Lab",
+        "Circuit Lab",
         "Codebusters",
-        "Crime Busters",
+        "Designer Genes",
         "Disease Detectives",
         "Dynamic Planet",
-        "Ecology",
         "Electric Vehicle",
+        "Engineering CAD",
         "Entomology",
         "Experimental Design",
         "Forensics",
-        "Fossils",
-        "Geologic Mapping",
         "Helicopter",
+        "Hovercraft",
+        "Machines",
         "Materials Science",
-        "Metric Mastery",
-        "Microbe Mission",
-        "Mission Possible",
-        "Optics",
-        "Potions and Poisons",
-        "Reach For The Stars",
-        "Road Scholar",
+        "Remote Sensing",
         "Robot Tour",
-        "Scrambler",
-        "Tower",
-        "Wind Power",
-        "Write It Do It",
+        "Rocks and Minerals",
+        "Water Quality",
     ];
 
     pub enum Division {
@@ -232,6 +230,8 @@ pub mod events {
         let events = fuzzy_search_sorted(&in_event, &EVENT_LIST);
         if &in_event == "widi" {
             Ok("Write It Do It".to_string())
+        } else if &in_event == "r&m" {
+            Ok("Rocks and Minerals".to_string())
         } else {
             //for (event, score) in &sorted_vec {
             //    println!("{:?} {:?}", event, score);
@@ -242,36 +242,29 @@ pub mod events {
 
     pub fn match_event_type(event: &str) -> Types {
         match event {
-            "Air Trajectory" => Types::Build,
             "Anatomy and Physiology" => Types::Study,
             "Astronomy" => Types::Study,
+            "Boomilever" => Types::Build,
             "Bungee Drop" => Types::Build,
             "Chemistry Lab" => Types::Hybrid,
+            "Circuit Lab" => Types::Hybrid,
             "Codebusters" => Types::Study,
-            "Crime Busters" => Types::Study,
+            "Designer Genes" => Types::Study,
             "Disease Detectives" => Types::Study,
             "Dynamic Planet" => Types::Study,
-            "Ecology" => Types::Study,
             "Electric Vehicle" => Types::Build,
+            "Engineering CAD" => Types::Hybrid,
             "Entomology" => Types::Study,
             "Experimental Design" => Types::Hybrid,
             "Forensics" => Types::Hybrid,
-            "Fossils" => Types::Study,
-            "Geologic Mapping" => Types::Study,
             "Helicopter" => Types::Build,
+            "Hovercraft" => Types::Build,
+            "Machines" => Types::Hybrid,
             "Materials Science" => Types::Hybrid,
-            "Metric Mastery" => Types::Study,
-            "Microbe Mission" => Types::Study,
-            "Mission Possible" => Types::Build,
-            "Optics" => Types::Hybrid,
-            "Potions and Poisons" => Types::Study,
-            "Reach For The Stars" => Types::Study,
-            "Road Scholar" => Types::Study,
+            "Remote Sensing" => Types::Study,
             "Robot Tour" => Types::Build,
-            "Scrambler" => Types::Build,
-            "Tower" => Types::Build,
-            "Wind Power" => Types::Build,
-            "Write It Do It" => Types::Hybrid,
+            "Rocks and Minerals" => Types::Study,
+            "Water Quality" => Types::Hybrid,
             _ => Types::Study,
         }
     }

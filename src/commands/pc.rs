@@ -18,6 +18,7 @@ pub struct ProgressCheck {
     team: String,
     other: String,
 }
+
 impl ProgressCheck {
     pub fn event(&mut self, event: String) {
         self.event = event;
@@ -155,7 +156,7 @@ pub async fn pc_event_handling(ctx: Context<'_>, event: &String) -> Result<Progr
         send_questions(
             &ctx,
             &replyhandle,
-            "Anything else you'd like to let us know?".to_string(),
+            "Anything else you'd like to let us know? (paste your link to the test doc here if necessary)".to_string(),
             &"".to_string(),
         )
         .await?,
@@ -171,7 +172,7 @@ pub async fn pc_event_handling(ctx: Context<'_>, event: &String) -> Result<Progr
     let confirmation_embed = CreateEmbed::default()
         .title(format!("Confirm that your Progress Check for {} is correct: ", event))
         .description(format!(
-            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n, 4. Notes: {}\n",
+            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n 4. Notes: {}\n",
             prog_check.duration, prog_check.progress, prog_check.improvements, prog_check.other
         ))
         .color(poise::serenity_prelude::Color::DARK_ORANGE)
@@ -350,7 +351,7 @@ async fn send_confirmation(
     let confirmation_embed = CreateEmbed::default()
         .title(format!("Confirm that your Progress Check for {} is correct: ", prog_check.event))
         .description(format!(
-            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n, 4. Notes: {}\n",
+            "1. Duration: {}\n 2. Progress: {}\n 3. Improvements: {}\n 4. Notes: {}\n",
             prog_check.duration, prog_check.progress, prog_check.improvements, prog_check.other
         ))
         .color(poise::serenity_prelude::Color::DARK_ORANGE)
