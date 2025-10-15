@@ -1,5 +1,5 @@
 use crate::commands::{google, pc};
-//use crate::secrets;
+use crate::secrets;
 use crate::utils::{self, Context, Error};
 use poise::serenity_prelude::{self as serenity, CreateMessage, MessageFlags, UserId};
 
@@ -76,15 +76,10 @@ pub async fn remind(
     Ok(())
 }
 
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
     //let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_sheets = google::gsheets::instantiate_hub(
-        std::env::var("SERVICE_ACCOUNT_CREDS")
-            .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
-            .as_str(),
-    )
-    .await?;
+    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
     let prog_check_file_id = get_server(&ctx.guild_id().unwrap().to_string())?.pc_file_id;
     let ctx_id = ctx.id();
     let mut event: Option<String>;
@@ -127,9 +122,9 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
             println!("{:?}", progress_check);
 
             let range = format!(
-                "'Team {} {}'!B:H",
+                "'Team {} {}'!B:G",
                 team,
-                utils::events::match_event_type(event.as_ref().unwrap())
+                utils::events::match_event_type(event.unwrap().as_str())
             );
 
             scioly_sheets
