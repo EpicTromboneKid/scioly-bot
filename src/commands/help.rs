@@ -7,10 +7,12 @@ pub async fn help(ctx: Context<'_>, command: Option<String>) -> Result<(), Error
         command.as_deref(),
         poise::builtins::HelpConfiguration {
             extra_text_at_bottom: "made by epictrombonekid",
-            ephemeral: true,
+            ephemeral: false,
             ..Default::default()
         },
     )
     .await?;
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    //ctx.say("<:sciolybot1:1395186612559810580>").await?;
     Ok(())
 }

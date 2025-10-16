@@ -5,6 +5,7 @@ use poise::{
     serenity_prelude::{self as serenity, http, CreateEmbedFooter, UserId},
     CreateReply, FrameworkError,
 };
+use rand::prelude::*;
 use rustls::crypto::{self};
 use scioly_bot::{
     commands::{
@@ -13,6 +14,7 @@ use scioly_bot::{
         help,
         moderation_tools,
         pc_handler as progress_checks,
+        reminder::{self, createreminder},
         resources,
         test_handler,
         user,
@@ -49,7 +51,7 @@ pub const BRAINROT_WORDS: [&str; 27] = [
     "galvanized square",
 ];
 
-use std::{sync::Arc, time::Duration};
+use std::{ops::Deref, sync::Arc, time::Duration};
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
@@ -97,7 +99,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
-                println!("Error while handling error: {}", e)
+                println!("Error while handling error: {e}")
             }
         }
     }
@@ -128,15 +130,15 @@ async fn main() {
             resources::set_server_defaults(),
             progress_checks::spcr(),
             user::add(),
+            reminder::createreminder(),
             progress_checks::remind(),
             moderation_tools::ban(),
             moderation_tools::kick(),
-            //ai::ai(),
             progress_checks::pc(),
         ],
         // commands go above this lol
         prefix_options: poise::PrefixFrameworkOptions {
-            prefix: Some("!".into()),
+            prefix: Some(";".into()),
             edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
                 Duration::from_secs(3600),
             ))),
@@ -225,7 +227,7 @@ async fn event_handler(
                     .await?;
             }
 
-            //FUNNY STUFFS
+            ////funny stuff xd
             //if new_message.author.id == serenity::UserId::new(742791701986541599) {
             //    new_message
             //        .react(ctx, serenity::ReactionType::Unicode("🧐".to_owned()))
@@ -234,11 +236,6 @@ async fn event_handler(
             //    new_message
             //        .react(ctx, serenity::ReactionType::Unicode("🐐".to_owned()))
             //        .await?;
-            //} else if new_message.author.id == serenity::UserId::new(773799550237278209) {
-            //    new_message
-            //        .react(ctx, serenity::ReactionType::Unicode("🫘".to_owned()))
-            //        .await?;
-            //}
             //} else if new_message.author.id == serenity::UserId::new(737781806136295440) {
             //    new_message
             //        .reply_ping(ctx, "# PHYSICS MAIN!!!!!!!!!")

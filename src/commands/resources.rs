@@ -11,7 +11,7 @@ pub async fn resources(ctx: Context<'_>) -> Result<(), Error> {
     let ctx_id = ctx.id();
     println!("ctx id: {}", ctx_id);
     let description = String::from(
-        "FOR ALL EVENTS: CHECK OUT THE RULES!!! [2024 Rules](http://soinc.org/rules-2024) \n
+        "FOR ALL EVENTS: CHECK OUT THE RULES!!! [2025 Rules](http://soinc.org/rules-2025) \n
         scioly.org has some tests through the test exchange: [scioly.org test exchange](https://scioly.org/tests) \n
         Materials from previous years: [LHS Scioly Material (from past years)](https://tinyurl.com/lhssciolymaterial) \n 
         huge test banks: [Scioly Test Bank](https://tinyurl.com/sciolytestbank) and [LHS test bank (sorted by event)](https://tinyurl.com/lhscse23)\n",
