@@ -1,6 +1,6 @@
 # SciolyBot
 
-## This project is currently in active development. Refer to the sections below for a more detailed list of features.
+## This project is currently in development. Refer to the sections below for a more detailed list of features.
 
 SciolyBot is a discord bot for **automatic + unattended test administration**, with a focus on providing a hassle-free test-taking experience.
 It is currently optimized for a workflow in Science Olympiad, but can be _easily adapted to other use cases_.
