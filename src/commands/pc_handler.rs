@@ -124,7 +124,7 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
             let range = format!(
                 "'Team {} {}'!B:G",
                 team,
-                utils::events::match_event_type(event.as_str())
+                utils::events::match_event_type(&event.expect("NO EVENT"))
             );
 
             scioly_sheets
