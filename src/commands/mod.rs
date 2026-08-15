@@ -9,5 +9,6 @@ pub mod pc;
 pub mod pc_handler;
 pub mod reminder;
 pub mod resources;
+pub mod roster;
 pub mod test_handler;
 pub mod user;
