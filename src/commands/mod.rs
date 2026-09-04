@@ -1,7 +1,7 @@
 pub mod admin_only;
 //pub mod ai;
 pub mod chat;
-pub mod embeds;
+//pub mod embeds;
 pub mod google;
 pub mod help;
 pub mod moderation_tools;
@@ -10,5 +10,5 @@ pub mod pc_handler;
 pub mod reminder;
 pub mod resources;
 pub mod roster;
-pub mod test_handler;
+//pub mod test_handler;
 pub mod user;

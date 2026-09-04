@@ -132,7 +132,7 @@ pub mod server_handling {
         pub server_id: String,
         pub server_name: String,
         pub server_email: String,
-        pub tests_file_id: String,
+        pub roster_file_id: String,
         pub pc_file_id: String,
     }
 

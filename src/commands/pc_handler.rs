@@ -89,7 +89,7 @@ pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
     // (event, event_id) is the format of the tuple
     let event_id_list = utils::user_handling::get_event_id_list(ctx)?;
 
-    let abort_id = format!("{}abort", &ctx_id);
+    let abort_id = format!("{}abort", ctx_id);
 
     pc::pc_start_embed(ctx, &event_id_list, &abort_id).await?;
 

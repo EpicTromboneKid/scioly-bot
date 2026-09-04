@@ -16,7 +16,8 @@ use scioly_bot::{
         pc_handler as progress_checks,
         reminder::{self, createreminder},
         resources,
-        test_handler,
+        roster,
+        //test_handler,
         user,
     },
     utils::{Data, Error},
@@ -121,7 +122,7 @@ async fn main() {
     let options = poise::FrameworkOptions {
         // commands go here lol
         commands: vec![
-            test_handler::test(),
+            //test_handler::test(),
             chat::chat(),
             help::help(),
             resources::resources(),
@@ -135,6 +136,7 @@ async fn main() {
             moderation_tools::ban(),
             moderation_tools::kick(),
             progress_checks::pc(),
+            roster::roster_sync(),
         ],
         // commands go above this lol
         prefix_options: poise::PrefixFrameworkOptions {
