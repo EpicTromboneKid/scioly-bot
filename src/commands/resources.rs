@@ -100,8 +100,7 @@ pub async fn set_defaults(
 pub async fn set_server_defaults(
     ctx: Context<'_>,
     #[description = "default email to use with the bot"] server_email: String,
-    #[description = "file id of the google sheet that contains the roster(s)"]
-    roster_file_id: String,
+    #[description = "file id of the google sheet that contains the main roster"] roster_file_id: String,
     #[description = "file id of the google sheet that the progress checks will be written to"]
     pc_file_id: String,
 ) -> Result<(), crate::utils::Error> {
@@ -136,7 +135,7 @@ pub async fn set_server_defaults(
 
     let _ = &ctx
         .say(format!(
-            "Your server defaults have been set to: email: {} roster file: https://docs.google.com/spreadsheets/d/{}/edit pc file: https://docs.google.com/spreadsheets/d/{}/edit",
+            "Your server defaults have been set to: email: {}, \nroster: https://docs.google.com/spreadsheets/d/{}/edit, \nprogress checks: https://docs.google.com/spreadsheets/d/{}/edit",
             &server_email, &roster_file_id, &pc_file_id
         ))
         .await?;

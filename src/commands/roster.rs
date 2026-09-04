@@ -17,6 +17,7 @@ pub async fn roster_sync(ctx: Context<'_>) -> Result<(), Error> {
         .get("13fwNMRKeqMEafSMgg6VBokJhSNCNIjD6eHDosfZd1GA")
         .doit()
         .await?;
-    println!("Tabs: {:?}", tabs.1.sheets);
+	let tab_array= tabs.1.sheets.unwrap();
+    let _ = &ctx.say(format!("Tabs: 0: {:?}, 1: {:?}, 2: {:?}, 3: {:?}", tab_array[0].properties.as_ref().unwrap().title, tab_array[1].properties.as_ref().unwrap().title, tab_array[2].properties.as_ref().unwrap().title, tab_array[3].properties.as_ref().unwrap().title)).await?;
     Ok(())
 }
