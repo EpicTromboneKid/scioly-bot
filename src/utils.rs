@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, OnceCell};
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
+
 //pub type SharedModel = Arc<Mutex<Model>>;
 pub type SciolyHubs<'a> = (
     &'a google_docs1::api::Docs<HttpsConnector<HttpConnector>>,
@@ -31,12 +32,21 @@ pub enum Perms {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum Teams {
+	TeamA,
+	TeamB,
+	TeamC,
+	Alternates,
+	NoTeam
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Thing {
     pub users: Vec<SciolyUser>,
 }
 
 pub mod user_handling {
-    use crate::utils::{Context, Error};
+    use crate::utils::{Context, Error, Teams::{self, NoTeam}};
 
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SciolyUser {
@@ -132,7 +142,7 @@ pub mod server_handling {
         pub server_id: String,
         pub server_name: String,
         pub server_email: String,
-        pub tests_file_id: String,
+        pub roster_file_id: String,
         pub pc_file_id: String,
     }
 

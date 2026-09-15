@@ -2,21 +2,21 @@
 
 use poise::{
     send_reply,
-    serenity_prelude::{self as serenity, http, CreateEmbedFooter, UserId},
+    serenity_prelude::{self as serenity, CreateEmbedFooter, UserId},
     CreateReply, FrameworkError,
 };
-use rand::prelude::*;
 use rustls::crypto::{self};
 use scioly_bot::{
     commands::{
         admin_only as register, //ai,
         chat,
-        help,
+        // help,
         moderation_tools,
         pc_handler as progress_checks,
-        reminder::{self, createreminder},
+        reminder::{self},
         resources,
-        test_handler,
+        roster,
+        //test_handler,
         user,
     },
     utils::{Data, Error},
@@ -51,7 +51,7 @@ pub const BRAINROT_WORDS: [&str; 27] = [
     "galvanized square",
 ];
 
-use std::{ops::Deref, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
@@ -121,13 +121,14 @@ async fn main() {
     let options = poise::FrameworkOptions {
         // commands go here lol
         commands: vec![
-            test_handler::test(),
+            //test_handler::test(),
             chat::chat(),
-            help::help(),
+            // help::help(),
             resources::resources(),
             register::register_commands(),
-            resources::set_defaults(),
+            resources::register(),
             resources::set_server_defaults(),
+			resources::read_server_defaults(),
             progress_checks::spcr(),
             user::add(),
             reminder::createreminder(),
@@ -147,6 +148,7 @@ async fn main() {
                 poise::Prefix::Literal("SciOlyBot"),
                 poise::Prefix::Literal("sciolybot"),
             ],
+			mention_as_prefix: false,
             ..Default::default()
         },
         // The global error handler for all error cases that may occur
@@ -175,8 +177,8 @@ async fn main() {
         // Enforce command checks even for owners (enforced by default)
         // Set to true to bypass checks, which is useful for testing
         skip_checks_for_owners: false,
-        event_handler: move |ctx, event, framework, data| {
-            Box::pin(event_handler(ctx, event, framework, data))
+        event_handler: move |event, framework| {
+            Box::pin(event_handler(framework, event))
         },
         owners: x,
         ..Default::default()
@@ -204,11 +206,10 @@ async fn main() {
 }
 
 async fn event_handler(
-    ctx: &poise::serenity_prelude::Context,
     event: &serenity::FullEvent,
-    _framework: poise::FrameworkContext<'_, Data, Error>,
-    _data: &Data,
+    framework: poise::FrameworkContext<'_, Data, Error>,
 ) -> Result<(), Error> {
+	let ctx = framework.serenity_context;
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.name);
@@ -253,7 +254,7 @@ async fn event_handler(
             }
         }
         _ => {
-            println!("Got an event! {:?}", event.snake_case_name());
+            // println!("Got an event! {:?}", event.snake_case_name());
         }
     }
     Ok(())

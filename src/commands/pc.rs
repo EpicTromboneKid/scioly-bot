@@ -345,7 +345,7 @@ async fn edit_answers(
 
 async fn send_confirmation(
     ctx: &Context<'_>,
-    press: &serenity::ComponentInteraction,
+    _press: &serenity::ComponentInteraction,
     prog_check: &ProgressCheck,
 ) -> Result<(), Error> {
     let confirmation_embed = CreateEmbed::default()
