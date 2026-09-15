@@ -3,7 +3,7 @@ pub mod admin_only;
 pub mod chat;
 //pub mod embeds;
 pub mod google;
-pub mod help;
+// pub mod help;
 pub mod moderation_tools;
 pub mod pc;
 pub mod pc_handler;
