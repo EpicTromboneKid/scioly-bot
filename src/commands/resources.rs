@@ -1,4 +1,4 @@
-use crate::{commands::roster, utils::{self, Context, Error, user_handling::{self, SciolyUser}}};
+use crate::{commands::roster, utils::{self, Context, Error, user::{self, SciolyUser}}};
 
 use poise::{
     serenity_prelude::{self as serenity, CreateEmbedFooter},
@@ -63,7 +63,7 @@ pub async fn register(
 
     let events = utils::events::extract_events(&roles);
 
-    let mut users = user_handling::get_user_data("userdata.json")?;
+    let mut users = user::get_user_data("userdata.json")?;
 
     let the_user = roster::roster_sync(ctx, name, userid.to_string(), officer, email.clone()).await?;
 
@@ -110,7 +110,7 @@ pub async fn register(
         users.push(the_user);
     }
 
-    user_handling::write_user_data("userdata.json", users)?;
+    user::write_user_data("userdata.json", users)?;
 
     Ok(())
 }
@@ -133,7 +133,7 @@ pub async fn set_server_defaults(
     println!("guild id: {}", server_id);
     println!("server name: {}", server_name);
 
-    let mut servers = crate::utils::server_handling::get_server_data("serverdata.json")?;
+    let mut servers = crate::utils::server::get_server_data("serverdata.json")?;
 
     let server = servers
         .servers
@@ -145,7 +145,7 @@ pub async fn set_server_defaults(
         server.roster_file_id = roster_file_id.trim().to_string();
         server.pc_file_id = pc_file_id.trim().to_string();
     } else {
-        let new_server = crate::utils::server_handling::Server {
+        let new_server = crate::utils::server::Server {
             server_id: server_id.clone(),
             server_name,
             server_email: server_email.trim().to_string(),
@@ -155,7 +155,7 @@ pub async fn set_server_defaults(
         servers.servers.push(new_server);
     }
 
-    crate::utils::server_handling::write_server_data("serverdata.json", servers)?;
+    crate::utils::server::write_server_data("serverdata.json", servers)?;
 
     let _ = &ctx
         .say(format!(
@@ -175,7 +175,7 @@ pub async fn set_server_defaults(
 pub async fn read_server_defaults(
     ctx: Context<'_>,
 ) -> Result<(), crate::utils::Error> {
-    let mut servers = crate::utils::server_handling::get_server_data("serverdata.json")?;
+    let mut servers = crate::utils::server::get_server_data("serverdata.json")?;
 	let server_email;
 	let roster_file_id;
 	let pc_file_id;

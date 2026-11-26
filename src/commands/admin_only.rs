@@ -9,7 +9,7 @@ pub async fn delete_file(
     _ctx: crate::utils::Context<'_>,
     file_id: String,
 ) -> Result<(), crate::utils::Error> {
-    let drive = crate::commands::google::gdrive::instantiate_hub(
+    let drive = crate::commands::google::drive(
         std::env::var("SERVICE_ACCOUNT_CREDS")
             .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
             .as_str(),

@@ -17,7 +17,7 @@ const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(360
 
 /// Start a test! Be sure to set your defaults with `/set_defaults` first!
 pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
-    let event_id_list = utils::user_handling::get_event_id_list(ctx)?;
+    let event_id_list = utils::user::get_event_id_list(ctx)?;
     let invoke_time = chrono::Utc::now()
         .time()
         .format("%-I:%M %p UTC")
@@ -25,19 +25,19 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
     const EVENT_TIME: u32 = 3000;
     let ctx_id = ctx.id();
     let abort_id = format!("{}abort", &ctx_id);
-    let scioly_drive = google::gdrive::instantiate_hub(
+    let scioly_drive = google::drive(
         std::env::var("SERVICE_ACCOUNT_CREDS")
             .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
             .as_str(),
     )
     .await?;
-    let scioly_docs = google::gdocs::instantiate_hub(
+    let scioly_docs = google::docs(
         std::env::var("SERVICE_ACCOUNT_CREDS")
             .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
             .as_str(),
     )
     .await?;
-    let scioly_sheets = google::gsheets::instantiate_hub(
+    let scioly_sheets = google::sheets(
         std::env::var("SERVICE_ACCOUNT_CREDS")
             .expect("please set the SERVICE_ACCOUNT_CREDS environment variable")
             .as_str(),
@@ -66,7 +66,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
         } else if press.data.custom_id == the_event_id {
             press.defer(ctx).await?;
             ctx.channel_id().broadcast_typing(ctx).await?;
-            let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
+            let user = crate::utils::user::find_user(&ctx.author().id.to_string())?;
             (file_id, perms) = embeds::send_test_embed(
                 ctx,
                 &press,
@@ -94,7 +94,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
                         }
                     },
                     _ = tokio::time::sleep(tokio::time::Duration::from_secs((EVENT_TIME-300).into())) => {
-                        let partners = crate::utils::user_handling::get_event_partners(&the_event, &ctx.author().id.to_string(), &user.team)?;
+                        let partners = crate::utils::user::get_event_partners(&the_event, &ctx.author().id.to_string(), &user.team)?;
                         let partner_ids = partners.iter().map(|partner| partner.userid.to_string()).collect::<Vec<String>>();
                         let remind_string = match partner_ids.len() {
                             1 => {
@@ -148,7 +148,7 @@ pub async fn test(ctx: Context<'_>) -> Result<(), Error> {
             .any(|(_, id)| id == &press.data.custom_id)
         {
             press.defer(ctx).await?;
-            let user = crate::utils::user_handling::find_user(&ctx.author().id.to_string())?;
+            let user = crate::utils::user::find_user(&ctx.author().id.to_string())?;
             let (event, event_id) = event_id_list
                 .iter()
                 .find(|(_, id)| id == &press.data.custom_id)

@@ -108,7 +108,7 @@ pub async fn send_start_embed(
     let invoke_components = CreateActionRow::Buttons(vec![start_button]);
 
     let partners =
-        crate::utils::user_handling::get_event_partners(event, &ctx.author().id.to_string(), team)?;
+        crate::utils::user::get_event_partners(event, &ctx.author().id.to_string(), team)?;
 
     let partner_ids = partners
         .iter()
@@ -120,7 +120,7 @@ pub async fn send_start_embed(
         .collect::<Vec<String>>();
 
     emails.push(
-        crate::utils::user_handling::get_user_data("userdata.json")?
+        crate::utils::user::get_user_data("userdata.json")?
             .iter()
             .find(|user| user.userid == ctx.author().id.to_string())
             .unwrap()
@@ -180,7 +180,7 @@ pub async fn send_test_embed<'a>(
     };
 
     let sheet_id =
-        utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.tests_file_id;
+        utils::server::get_server(&ctx.guild_id().unwrap().to_string())?.tests_file_id;
 
     let sheets = sciolysheets
         .spreadsheets()
@@ -192,7 +192,7 @@ pub async fn send_test_embed<'a>(
         .unwrap();
 
     emails.push(
-        utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
+        utils::server::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
     );
 
     let result = sciolydocs.documents().create(req).doit().await?;
@@ -201,7 +201,7 @@ pub async fn send_test_embed<'a>(
     // insert link to answer doc here
     let doc_url: String = format!("https://docs.google.com/document/d/{}/edit", file_id);
 
-    let test_url = match gsheets::get_link(event, sheets) {
+    let test_url = match google::get_link(event, sheets) {
         Some(url) => url,
         None => {
             return Err("Test URL not found, let one of the officers know.".into());
@@ -230,8 +230,8 @@ pub async fn send_test_embed<'a>(
 
     press.edit_response(ctx, builder).await?;
 
-    let out = google::gdrive::change_perms(
-        sciolydrive,
+    let out = google::change_perms(
+        scioly_drive,
         &file_id,
         Perms::Editor(),
         &emails,
@@ -254,11 +254,11 @@ pub async fn send_finish_embed(
     for perm in permlist {
         let (newemail, permission) = perm;
         if newemail.eq(
-            &utils::server_handling::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
+            &utils::server::get_server(&ctx.guild_id().unwrap().to_string())?.server_email,
         ) {
             continue;
         }
-        google::gdrive::change_perms(
+        google::change_perms(
             scioly_drive,
             file_id,
             crate::utils::Perms::Commenter(),

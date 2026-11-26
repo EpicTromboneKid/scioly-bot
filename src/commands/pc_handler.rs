@@ -4,14 +4,14 @@ use crate::utils::{self, Context, Error};
 use poise::serenity_prelude::{self as serenity, CreateMessage, MessageFlags, UserId};
 
 use poise::CreateReply;
-use server_handling::get_server;
+use crate::utils::server::get_server;
 
 use crate::utils::*;
 
 /// Sends a reminder to fill out the progress check form to all users who are in a team.
 #[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn spcr(ctx: Context<'_>) -> Result<(), Error> {
-    let users = user_handling::get_user_data("userdata.json")?;
+    let users = user::get_user_data("userdata.json")?;
     let prog_check_message =
         "Reminder to fill out the progress check form [here](https://tinyurl.com/sciolyprog2425)";
 
@@ -78,16 +78,16 @@ pub async fn remind(
 
 #[poise::command(prefix_command, slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn pc(ctx: Context<'_>) -> Result<(), Error> {
-    //let scioly_drive = google::gdrive::instantiate_hub(secrets::servicefilename()).await?;
-    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
+    //let scioly_drive = google::drive(&secrets::servicefilename()).await?;
+    let scioly_sheets = google::sheets(&secrets::servicefilename()).await?;
     let prog_check_file_id = get_server(&ctx.guild_id().unwrap().to_string())?.pc_file_id;
     let ctx_id = ctx.id();
     let mut event: Option<String>;
-    let user = user_handling::find_user(&ctx.author().id.to_string())?;
+    let user = user::find_user(&ctx.author().id.to_string())?;
     let team = user.team;
 
     // (event, event_id) is the format of the tuple
-    let event_id_list = utils::user_handling::get_event_id_list(ctx)?;
+    let event_id_list = utils::user::get_event_id_list(ctx)?;
 
     let abort_id = format!("{}abort", ctx_id);
 

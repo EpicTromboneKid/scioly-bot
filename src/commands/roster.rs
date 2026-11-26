@@ -3,15 +3,15 @@ use poise::serenity_prelude::{self as serenity};
 
 use crate::commands::google;
 use crate::secrets;
-use crate::utils::server_handling::get_server;
-use crate::utils::user_handling::SciolyUser;
+use crate::utils::server::get_server;
+use crate::utils::user::SciolyUser;
 use crate::utils::{Context, Error};
 use rust_fuzzy_search as fuzzy;
 
 use crate::utils::*;
 
 pub async fn roster_sync(ctx: Context<'_>, name: String, id: String, officer: bool, default_email: String) -> Result<SciolyUser, Error> {
-    let scioly_sheets = google::gsheets::instantiate_hub(secrets::servicefilename()).await?;
+    let scioly_sheets = google::sheets(&secrets::servicefilename()).await?;
     let roster_file_id = get_server(&ctx.guild_id().unwrap().to_string())?.roster_file_id;
     let tabs = scioly_sheets
         .spreadsheets()
